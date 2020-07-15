@@ -15,7 +15,7 @@ pip install -r requirements.txt
 python server.py
 ```
 ## Check website
-[http://localhost:5050/](http://localhost:5050/)
+[http://localhost:5000/](http://localhost:5000/)
 
 ## Website Screenshot
 1. Home page

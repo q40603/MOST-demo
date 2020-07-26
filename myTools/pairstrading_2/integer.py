@@ -62,13 +62,9 @@ def num_weight( w1 , w2 , price1 , price2 , maxi , initial_capital):
     
     #initial_capital = 3000      # 總資產300萬台幣
     
-    #initial_capital = 3000      # 總資產300萬台幣
-    #print("w1:",w1,",w2:",w2)
     stock1_num = (w1 * initial_capital)/price1
     stock2_num = (w2 * initial_capital)/price2
-    #print("stw1:",stock1_num,"stw2",stock2_num)
-#    if price1>1000 or price2 >1000:
-#        return [ 0 , 0 ]
+    
     if abs(stock1_num) > maxi or abs(stock2_num) > maxi :
         
         stock1_maxi = maxi
@@ -77,19 +73,18 @@ def num_weight( w1 , w2 , price1 , price2 , maxi , initial_capital):
     elif abs(stock1_num) > maxi or abs(stock2_num) < maxi :
         
         stock1_maxi = maxi
-        stock2_maxi = abs(int(round(stock2_num)))
+        stock2_maxi = int(round(stock2_num))
         
     elif abs(stock1_num) < maxi or abs(stock2_num) > maxi :
         
-        stock1_maxi = abs(int(round(stock1_num)))
+        stock1_maxi = int(round(stock1_num))
         stock2_maxi = maxi
         
     else:
         
-        stock1_maxi = abs(int(round(stock1_num)))
-        stock2_maxi = abs(int(round(stock2_num)))
-    if (abs(stock1_num)<0.5) or (abs(stock2_num) <0.5) :
-        return [0,0]
+        stock1_maxi = int(round(stock1_num))
+        stock2_maxi = int(round(stock2_num))
+    
     w1 , w2 = min_integer( stock1_num , stock2_num , stock1_maxi , stock2_maxi )
     
     return [ w1 , w2 ]

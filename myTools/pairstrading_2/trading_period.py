@@ -16,7 +16,6 @@ from .MTSA import fore_chow , spread_chow
 #from keras.models import load_model
 import pandas as pd
 import numpy as np
-import math
 
 # 標準差倍數當作停損門檻(滑價＋交易稅)-------------------------------------------------------------------------------
 
@@ -25,8 +24,6 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
     table = pd.DataFrame(table).T
     
     min_price = day1
-
-    #tick_data = tick_data.applymap(lambda x: x/100)
 
     #min_price = min_price.dropna(axis = 1)
     #min_price.index  = np.arange(0,len(min_price),1)
@@ -44,12 +41,12 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
     
     spread = table.w1[pair] * np.log(min_data[ table.stock1[pair] ]) + table.w2[pair] * np.log(min_data[ table.stock2[pair] ])
     
-    up_open = table.e_mu[pair] + table.e_stdev[pair] * open_time                      # 上開倉門檻
-    down_open = table.e_mu[pair] - table.e_stdev[pair] * open_time                    # 下開倉門檻
+    up_open = table.mu[pair] + table.stdev[pair] * open_time                      # 上開倉門檻
+    down_open = table.mu[pair] - table.stdev[pair] * open_time                    # 下開倉門檻
         
-    stop_loss = table.e_stdev[pair] * stop_loss_time                                # 停損門檻
+    stop_loss = table.stdev[pair] * stop_loss_time                                # 停損門檻
         
-    close = table.e_mu[pair]                                                        # 平倉(均值)
+    close = table.mu[pair]                                                        # 平倉(均值)
         
     M = round( 1/table.zcr[pair] )  if (len(spread) >= 115 and table.zcr[pair] != 0 ) else 0                                  # 平均持有時間
         
@@ -66,16 +63,15 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
     stock2_profit = []
     no_more = False
     trade_status = ""
-
     for i in range( len(spread)-2 ):
-        trade_status = str(min_price["mtimestamp"][t+i]) + "/" 
+        trade_status = str(min_price["mtimestamp"][t+i]) + "/"
         stock1_seq = min_price[ table.stock1[pair] ].loc[0:t+i]
         stock2_seq = min_price[ table.stock2[pair] ].loc[0:t+i]
         
         if position == 0 and len(spread)-i > M :                                   # 之前無開倉
             # trade_status += "之前無開倉，且剩餘時間大於平均持有時間，"
             if ( spread[i] - up_open ) * ( spread[i+1] - up_open ) < 0 :
-                trade_status += "碰到上開倉門檻 "
+                trade_status += "碰到上開倉門檻, "
                 # 資金權重轉股票張數，並整數化
                 print(str(table.stock1.values[0]))
                 w1 , w2 = num_weight( table.w1[pair] , table.w2[pair] , tick_data[table.stock1[pair]][(i+2)] , tick_data[table.stock2[pair]][(i+2)] , maxi , capital )          
@@ -83,40 +79,54 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 do_w2 = "買進" if w2 > 0 else "放空"
                 spread1 = w1 * np.log( stock1_seq ) + w2 * np.log( stock2_seq )
                 
-                if w1*w2==0:
-                    continue
+                # if adfuller( spread1 , regression='ct' )[1] > 0.05:                                   # spread平穩才開倉
+                #     trade_status += "spread不平穩，不開倉"
+                #     position = 0
+                        
+                #     stock1_payoff = 0
+                        
+                #     stock2_payoff = 0
+                        
+                # else:
+                    
                 position = -1
                 
                 stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
                 
                 stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100  # 計算交易成本
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )  # 計算交易成本
                 
                 trade = trade + 1
-                trade_status += ",上開倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}/".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
+                trade_status += ",上開倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
             
             elif ( spread[i] - down_open ) * ( spread[i+1] - down_open ) < 0 :
-                trade_status += "碰到下開倉門檻 "
+                trade_status += "碰到下開倉門檻, "
                 # 資金權重轉股票張數，並整數化
                 w1 , w2 = num_weight( table.w1[pair] , table.w2[pair] , tick_data[table.stock1[pair]][(i+2)] , tick_data[table.stock2[pair]][(i+2)] , maxi , capital )          
                     
                 spread1 = w1 * np.log(stock1_seq) + w2 * np.log(stock2_seq)
                     
-                if w1*w2==0:
-                    continue
+                # if adfuller( spread1 , regression='ct' )[1] > 0.05 :                                    # spread平穩才開倉
+                #     trade_status += "spread不平穩，不開倉"
+                #     position = 0
+                        
+                #     stock1_payoff = 0
+                        
+                #     stock2_payoff = 0
+                        
+                # else:
+                    
                 position = 1
                 
                 stock1_payoff = -w1 * slip( tick_data[table.stock1[pair]][(i+2)] , -table.w1[pair] )
                 
                 stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100   # 計算交易成本
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )   # 計算交易成本
                 
                 trade = trade + 1
-                trade_status += "下開倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}/".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff)
+                trade_status += "下開倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
                     
             else: 
                 trade_status += "沒碰到開倉門檻，維持不開倉"
@@ -131,6 +141,9 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
             trade_status += "之前有開空倉, "
             spread1 = table.w1[pair] * np.log(stock1_seq) + table.w2[pair] * np.log(stock2_seq)
             
+            #temp=spread1[i+1:t+i+1].reshape(1,150,1)
+            #pre=model.predict_classes(temp)
+            
             if ( spread[i] - close ) * ( spread[i+1] - close ) < 0 :
                 
                 position = 0                                                                         # 平倉
@@ -139,42 +152,45 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100       # 計算交易成本
-                
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "碰到均值，平空倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff, tmp_profit)
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )       # 計算交易成本
+                trade_status += "碰到均值，平空倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
                     
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             elif ( spread[i] - (close + stop_loss) ) * ( spread[i+1] - (close + stop_loss) ) < 0 :
                 
                 
-                position = 0                                                                                   # 碰到停損門檻，強制平倉
+                position = -2                                                                                   # 碰到停損門檻，強制平倉
             
                 stock1_payoff = -w1 * slip( tick_data[table.stock1[pair]][(i+2)] , -table.w1[pair] )
                 
                 stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100       # 計算交易成本
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )       # 計算交易成本
+                trade_status += "碰到停損門檻，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)    
+                #每次交易報酬做累加(最後除以交易次數做平均)
                 
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "碰到停損門檻，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff, tmp_profit) 
+            #elif adfuller( spread1 , regression='ct' )[1] > 0.05 :
                 
-            # elif fore_chow( min_price[table.stock1[pair]].loc[0:t] , min_price[table.stock2[pair]].loc[0:t] , stock1_seq , stock2_seq ) == 1 :
-                
-            #     position = -3                                                                                    # 結構性斷裂，強制平倉
+                #position = -3                                                                                    # 出現單跟，強制平倉
             
-            #     stock1_payoff = -w1 * slip( tick_data[table.stock1[pair]][(i+2)] , -table.w1[pair] )
+                #stock1_payoff = -w1 * slip( tick_data[table.stock1[pair]][(i+2)] , -table.w1[pair] )
                 
-            #     stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
+                #stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-            #     stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-            # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
-            #     trade_status += "結構性斷裂，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff)
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
+                #每次交易報酬做累加(最後除以交易次數做平均)
+                
+            elif fore_chow( min_price[table.stock1[pair]].loc[0:t] , min_price[table.stock2[pair]].loc[0:t] , stock1_seq , stock2_seq ) == 1 :
+                
+                position = -3                                                                                    # 結構性斷裂，強制平倉
+            
+                stock1_payoff = -w1 * slip( tick_data[table.stock1[pair]][(i+2)] , -table.w1[pair] )
+                
+                stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
+                    
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
+                trade_status += "結構性斷裂，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif spread_chow( spread1 , i ) == 1 :
@@ -185,8 +201,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif send_request( spread1 , 150 , 0.9 ) == 1:
@@ -197,8 +212,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif ( (pre!=0) | (pre!=4) ):
@@ -209,8 +223,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][(i+2)] , -table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             elif i == (len(spread)-3) :                                                                          # 回測結束，強制平倉
@@ -221,12 +234,8 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 stock2_payoff = -w2 * slip( tick_data[table.stock2[pair]][len(tick_data)-1] , -table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100         # 計算交易成本
-                
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "回測結束，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff, tmp_profit)    
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )         # 計算交易成本
+                trade_status += "回測結束，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)    
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             else: 
@@ -247,36 +256,27 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
             
             if ( spread[i] - close ) * ( spread[i+1] - close ) < 0 :
                 
-                                                                                                       # 平倉
-                position = -2  
-                
-                stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
-                
-                stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
-                    
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100           # 計算交易成本
-                
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "碰到均值，平多倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}  /  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff, tmp_profit)    
-                #每次交易報酬做累加(最後除以交易次數做平均)
-                
-            elif ( spread[i] - (close - stop_loss) ) * ( spread[i+1] - (close - stop_loss) ) < 0 :
-                
-                
-                position = 0                                                                                      # 碰到停損門檻，強制平倉
+                position = 0                                                                                       # 平倉
             
                 stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
                 
                 stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100           # 計算交易成本
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )           # 計算交易成本
+                trade_status += "碰到均值，平多倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)    
+                #每次交易報酬做累加(最後除以交易次數做平均)
                 
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "碰到停損門檻，強制平倉 {} &nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp{} /  {}".format(int(w1), stock1_payoff, int(w2), stock2_payoff, tmp_profit)    
+            elif ( spread[i] - (close - stop_loss) ) * ( spread[i+1] - (close - stop_loss) ) < 0 :
+                
+                
+                position = -2                                                                                       # 碰到停損門檻，強制平倉
+            
+                stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
+                
+                stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
+                    
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )           # 計算交易成本
+                trade_status += "碰到停損門檻，強制平倉 {} &nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp{}".format(int(w1), stock1_payoff, int(w2), stock2_payoff)    
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif adfuller( spread1 , regression='ct' )[1] > 0.05 :
@@ -287,21 +287,19 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
-            # elif fore_chow( min_price[table.stock1[pair]].loc[0:t] , min_price[table.stock2[pair]].loc[0:t] , stock1_seq , stock2_seq ) == 1 :
+            elif fore_chow( min_price[table.stock1[pair]].loc[0:t] , min_price[table.stock2[pair]].loc[0:t] , stock1_seq , stock2_seq ) == 1 :
                 
-            #     position = -3                                                                                        # 結構性斷裂，強制平倉
+                position = -3                                                                                        # 結構性斷裂，強制平倉
             
-            #     stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
+                stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
                 
-            #     stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
+                stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-            #     stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-            # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100            # 計算交易成本
-            #     trade_status += "結構性斷裂，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )            # 計算交易成本
+                trade_status += "結構性斷裂，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif spread_chow( spread1 , i ) == 1 :
@@ -312,8 +310,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100            # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )            # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif send_request( spread1 , 150 , 0.9 ) == 1:
@@ -324,8 +321,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                 
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif ( (pre!=0) | (pre!=4) ):
@@ -336,8 +332,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 #stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][(i+2)] , table.w2[pair] )
                     
-                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                # stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100        # 計算交易成本
+                #stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )        # 計算交易成本
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             elif i == (len(spread)-3) :                                                                              # 回測結束，強制平倉
@@ -348,13 +343,8 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 stock2_payoff = w2 * slip( tick_data[table.stock2[pair]][len(tick_data)-1] , table.w2[pair] )
                     
-                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )
-                stock1_payoff, stock2_payoff = math.ceil(stock1_payoff*100)/100, math.ceil(stock2_payoff*100)/100            # 計算交易成本
-                
-                tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
-                tmp_profit = math.ceil(tmp_profit*1000)
-
-                trade_status += "回測結束，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff, tmp_profit)    
+                stock1_payoff , stock2_payoff = tax(stock1_payoff , stock2_payoff , position , tax_cost )            # 計算交易成本
+                trade_status += "回測結束，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff)    
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             else: 
@@ -390,11 +380,28 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
         if(no_more):
             break
         trade_history.append(trade_status)
-
+        # print(trade_status)
+    #print(position)
+    
+    #x = np.arange(0,121)
+    #plt.plot(spread)
+    #plt.axhline(y=close,color='r')
+    #plt.axhline(y=up_open,color='r')
+    #plt.axhline(y=down_open,color='r')
+    #plt.axhline(y=close+stop_loss,color='green')
+    #plt.axhline(y=close-stop_loss,color='green')
+            
+    #bp = np.array(np.where( pos == -3 ))
+            
+    #if bp.size != 0:
+                
+        #plt.axvline(x=bp[0][0],color='green')
+            
+    #plt.show()
     
     trading_profit = sum(stock1_profit) + sum(stock2_profit)
         
-    if 1.2 * table.e_stdev[pair] < tax_cost:
+    if 1.2 * table.stdev[pair] < tax_cost:
         
         trading_profit = 0
             
@@ -417,14 +424,27 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
         
         local_rt = trading_profit/(capital*trade)
         #local_rt = trading_profit/(capital*trade)
-
-    print(stock1_profit,stock2_profit)
+        
+    #posi = pos[len(spread)-2]
+    '''
+    if tax_cost == 0:
+    
+        local_profit = pd.DataFrame(local_profit)       ; local_profit.columns = ["profit without cost"]
+        
+    else:
+        
+        local_profit = pd.DataFrame(local_profit)       ; local_profit.columns = ["profit"]
+        
+    local_open_num = pd.DataFrame(local_open_num)   ; local_open_num.columns = ["open number"]
+    local_rt = pd.DataFrame(local_rt)               ; local_rt.columns = ["return"]
+    
+    #back_test = pd.concat([local_profit,local_open_num,local_rt],axis=1)
+    '''
     return  {
         'trade_history' : trade_history , 
         "local_profit" : local_profit , 
         "local_open_num" : local_open_num, 
-        "local_rt" : local_rt,
-        "profit" : trading_profit
+        "local_rt" : local_rt
     } #, 0
     
     

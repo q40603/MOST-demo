@@ -16,6 +16,8 @@ from . import ADF
 import pandas as pd
 import numpy as np
 from pymongo import MongoClient
+from .vecm import para_vecm
+from .Matrix_function import order_select
 
 
 
@@ -57,30 +59,6 @@ def get_stock_news(choose_date,cusip):
 	for i in tmp:
 		#i["time"] = i["time"].strftime("%H:%M")
 		final.append(i)
-
-	# base_url = "https://tw.stock.yahoo.com/"
-	# res = requests.get('https://tw.stock.yahoo.com/q/h?s={}'.format(cusip))
-	# soup = BeautifulSoup(res.text,'html.parser')
-	# result = soup.find_all('tr',attrs={'bgcolor': '#fff1c4'})
-	# num = 0
-	# data = {}
-	# final = []
-	# for i in result:
-	# 	tmp = i.text.replace("\n","").replace("•","")
-	# 	print(tmp)
-	# 	tmp2 = num%2
-		
-	# 	if not tmp2:
-	# 		data["title"] = tmp
-	# 		data["href"] = base_url + i.find('a')['href']
-	# 		print(base_url + i.find('a')['href'])
-	# 	if tmp2:
-	# 		data["time"] = tmp
-	# 		if(date in tmp):
-	# 			final.append(data)
-	# 		data = {}
-	# 		print("----------")
-	# 	num += 1
 	return final 
 
 
@@ -91,9 +69,60 @@ def get_s_name(s1,s2):
 	return(result)
 
 
-def get_pairs_spread(choose_date, s1, s2, w1, w2):
+def spread_mean(stock1,stock2,table):
+    model = ""
+    #print(stock1, stock2)
+    if table["model_type"] == 'model1':
+        model = 'H2'
+    elif table["model_type"] == 'model2':
+        model = 'H1*'
+    elif table["model_type"] == 'model3':
+        model = 'H1'
+    #print(model)
+    stock1 = stock1[15:]
+    stock2 = stock2[15:]
+    stock1 = stock1[:150]
+    stock2 = stock2[:150]
+    b1 = table["w1"]
+    b2 = table["w2"]
+    y = np.vstack( [stock1, stock2] ).T
+    logy = np.log(y)#y.copy()
+    lyc = logy.copy()
+    p = order_select(logy,5)
+    #print(logy)
+    #print('p:',p)
+    _,_,para = para_vecm(logy,model,p)
+    logy = np.mat(logy)
+    y_1 = np.mat(logy[p:])
+    dy = np.mat(np.diff(logy,axis=0))
+    for j in range(len(stock1)-p-1):
+        if model == 'H1':
+            if p!=1:
+                delta = para[0] * para[1].T * y_1[j].T + para[2] * np.hstack([dy[j:(j+p-1)].flatten(),np.mat([1])]).T
+            else:
+                delta = para[0] * para[1].T * y_1[j].T + para[2] * np.mat([1])
+        elif model == 'H1*':
+            if p!=1:
+                delta = para[0] * para[1].T * np.hstack([y_1[j],np.mat([1])]).T + para[2] * dy[j:(j+p-1)].flatten().T
+            else:
+                delta = para[0] * para[1].T * np.hstack([y_1[j],np.mat([1])]).T
+        elif model == 'H2':
+            if p!=1:
+                delta = para[0] * para[1].T * y_1[j].T + para[2] * dy[j:(j+p-1)].flatten().T
+            else:
+                delta = para[0] * para[1].T * y_1[j].T
+        else:
+            print('Errrrror')
+            break
+        dy[j+p,:] = delta.T            
+        y_1[j+1] = y_1[j] + delta.T
+    b = np.mat([[b1],[b2]])
+    spread_m = np.array(b.T*y_1.T).flatten()
+    return spread_m
+
+def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 	fin_db.ping(reconnect = True)
-	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/sum(volume) as avg_price from " + s1 +  " where left(stime,10) = '" + choose_date + "' GROUP BY mtimestamp;" 
+	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
 	fin_cursor.execute(query1)
 	result1 = fin_cursor.fetchall()
 	fin_db.commit()
@@ -104,11 +133,7 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2):
 	stock_1 = df.fillna(method='backfill')
 	stock_1 = stock_1.reset_index()
 
-	# for i,j in stock_1.iterrows():
-	# 	print(j)
-
-
-	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/sum(volume) as avg_price from " + s2 +  " where left(stime,10) = '" + choose_date + "' GROUP BY mtimestamp;" 
+	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
 	fin_cursor.execute(query2)
 	result2 = fin_cursor.fetchall()
 	fin_db.commit()
@@ -119,8 +144,8 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2):
 	stock_2 = df.fillna(method='backfill')
 	stock_2 = stock_2.reset_index()
 
-	stock_1["avg_price"] = stock_1["avg_price"].apply(lambda x: x/100)
-	stock_2["avg_price"] = stock_2["avg_price"].apply(lambda x: x/100)
+	stock1_std = stock_1["avg_price"].std() 
+	stock2_std = stock_2["avg_price"].std() 
 
 	spread = pd.DataFrame()
 	spread["mtimestamp"] = stock_2["mtimestamp"]
@@ -128,20 +153,28 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2):
 	spread = spread.fillna(method='ffill')
 	spread = spread.fillna(method='backfill')
 
+
+	table = {
+		"w1" : w1,
+		"w2" : w2,
+		"model_type" : model_type
+	}
+
+	spread_m = spread_mean(stock_1["avg_price"], stock_2["avg_price"], table )
 	return {
 		"s1" : stock_1.to_dict("records"),
+		"s1_std" : stock1_std,
 		"s2" : stock_2.to_dict("records"),
-		"spread" : spread.to_dict("records")
+		"s2_std" : stock2_std,
+		"spread" : spread.to_dict("records"),
+		"spread_m" : spread_m.tolist()
 	}
-	# for i,j in stock_2.iterrows():
-	# 	print(j)
 
 def get_all_pairs(choose_date):
 	fin_db.ping(reconnect = True)
-	query = "select stock1, stock2, w1, w2, snr, zcr, mu, stdev, e_mu, e_stdev from pairs where f_date = '" + choose_date + "' ;"
+	query = "select stock1, stock2, w1, w2, model_type, snr, zcr, mu, stdev, e_mu, e_stdev, action from pairs where f_date = '" + choose_date + "' ;"
 	fin_cursor.execute(query)
 	data = fin_cursor.fetchall()
-
 	return json.dumps(data)
 
 
@@ -161,33 +194,15 @@ def trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, t
 	day1 = df.fillna(method='backfill')
 	day1 = day1.reset_index()
 	day1.index = np.arange(0,len(day1),1)
-	# print(day1)
-	day1_1 = day1.iloc[0 : 149,:]
-	# print(df)
-	day1_1.index = np.arange(0,len(day1_1),1)
 
-	#day1_1["avg_price"] = day1_1["avg_price"].apply(lambda x: x/100)
-	# print(len(day1_1.index))
 
 	# print(df)
 
-	query = "select distinct f_date from pairs where f_date = '"+ choose_date +"';"
-	fin_cursor.execute(query)
-	result = list(fin_cursor.fetchall())
-	fin_db.commit()
-	# if (not len(result)):
-	# 	unitroot_stock = ADF.adf.drop_stationary(ADF.adf(day1_1.select_dtypes(exclude=['object'])))    
-	# 	a = accelerate_formation.pairs_trading(unitroot_stock)
-	# 	table = accelerate_formation.pairs_trading.formation_period( a )
-	# 	for i, j in table.iterrows():
-	# 		sql = "INSERT INTO pairs (stock1, stock2, w1, w2, snr, zcr, mu, stdev, f_date ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
-	# 		try :
-	# 			fin_cursor.execute(sql, (str(j["stock1"]), str(j["stock2"]), str(j["w1"]), str(j["w2"]), str(j["snr"]), str(j["zcr"]), str(j["mu"]), str(j["stdev"]), str(choose_date)))
-	# 		except Exception as e:
-	# 			print(e,j)
-	# 	fin_db.commit()
-	# 	# print(table)
-	# else:
+	# query = "select distinct f_date from pairs where f_date = '"+ choose_date +"';"
+	# fin_cursor.execute(query)
+	# result = list(fin_cursor.fetchall())
+	# fin_db.commit()
+
 
 	query = "select * from pairs where f_date = '"+ choose_date +"';"
 	fin_cursor.execute(query)
@@ -196,10 +211,6 @@ def trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, t
 	table = pd.DataFrame(list(result))
 	table.index = np.arange(0,len(table),1)
 
-	# print(table)
-		# tracking_list = pd.concat([table.stock1, table.stock2])
-		# tracking_list = pd.unique(tracking_list)
-		# print(tracking_list)
 
 
 		
@@ -217,8 +228,6 @@ def trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, t
 	df = df.fillna(method='ffill')
 	tick_data = df.fillna(method='backfill')
 	tick_data.index = np.arange(0,len(tick_data),1)
-	#tick_data["price"] = tick_data["price"].apply(lambda x: x/100)
-	# print(tick_data)
 
 	
 
@@ -267,122 +276,3 @@ if __name__ == '__main__':
 	#get_pairs_spread(choose_date, "s_2330", "s_2313")
 	trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, tax_cost)
 
-
-
-# 	query = "select left(stime, 16) as mtimestamp, code , sum(volume * price)/sum(volume) as avg_price from s_price_tick where stime >= '"+ choose_date +"' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"
-# 	print(query)
-# 	fin_cursor.execute(query)
-# 	result = fin_cursor.fetchall()
-# 	fin_db.commit()
-# 	df = pd.DataFrame(list(result))
-# 	df = df.pivot(index='mtimestamp', columns='code', values='avg_price')
-# 	df = df.fillna(method='ffill')
-# 	day1 = df.fillna(method='backfill')
-# 	day1 = day1.reset_index()
-# 	# print(day1)
-# 	day1.index = np.arange(0,len(day1),1)
-# 	# print(day1)
-# 	day1_1 = day1.iloc[0 : 149,:]
-# 	# print(df)
-# 	day1_1.index = np.arange(0,len(day1_1),1)
-# 	# print(len(day1_1.index))
-
-# 	# print(df)
-
-# 	query = "select distinct f_date from pairs where f_date = '"+ choose_date +"';"
-# 	fin_cursor.execute(query)
-# 	result = list(fin_cursor.fetchall())
-# 	fin_db.commit()
-# 	if (not len(result)):
-# 		unitroot_stock = ADF.adf.drop_stationary(ADF.adf(day1_1.select_dtypes(exclude=['object'])))    
-# 		a = accelerate_formation.pairs_trading(unitroot_stock)
-# 		table = accelerate_formation.pairs_trading.formation_period( a )
-# 		for i, j in table.iterrows():
-# 			sql = "INSERT INTO pairs (stock1, stock2, w1, w2, snr, zcr, mu, stdev, f_date ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);"
-# 			try :
-# 				fin_cursor.execute(sql, (str(j["stock1"]), str(j["stock2"]), str(j["w1"]), str(j["w2"]), str(j["snr"]), str(j["zcr"]), str(j["mu"]), str(j["stdev"]), str(choose_date)))
-# 			except Exception as e:
-# 				print(e,j)
-# 		fin_db.commit()
-# 		# print(table)
-# 	else:
-# 		print(datetime.now().strftime("%Y-%b-%d"))
-# 		query = "select * from pairs where f_date = '"+ choose_date +"';"
-# 		fin_cursor.execute(query)
-# 		result = fin_cursor.fetchall()
-# 		fin_db.commit()
-# 		table = pd.DataFrame(list(result))
-# 		table.index = np.arange(0,len(table),1)
-# 		# print(table)
-# 	print(table)
-# 	# tracking_list = pd.concat([table.stock1, table.stock2])
-# 	# tracking_list = pd.unique(tracking_list)
-# 	# print(tracking_list)
-
-
-	
-# #========================================== back test ==============================================
-
-
-
-# 	query = "select left(stime, 16) as mtimestamp, code , price from s_price_tick where stime >= '"+ choose_date +" 11:29' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"   
-# 	fin_cursor.execute(query)
-# 	result = fin_cursor.fetchall()
-# 	fin_db.commit()
-# 	df = pd.DataFrame(list(result))
-# 	df = df.pivot(index='mtimestamp', columns='code', values='price')
-# 	df = df.fillna(method='ffill')
-# 	tick_data = df.fillna(method='backfill')
-# 	tick_data.index = np.arange(0,len(tick_data),1)
-# 	print(tick_data)
-
-	
-
-# 	query = "select left(stime, 16) as mtimestamp, code , sum(volume * price)/sum(volume) as avg_price from s_price_tick where stime > '"+ choose_date +" 11:30' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"
-# 	fin_cursor.execute(query)
-# 	result = fin_cursor.fetchall()
-# 	fin_db.commit()
-# 	df = pd.DataFrame(list(result))
-# 	df = df.pivot(index='mtimestamp', columns='code', values='avg_price')
-# 	df = df.fillna(method='ffill')
-# 	min_data = df.fillna(method='backfill')
-# 	min_data.index = np.arange(0,len(min_data),1)
-# 	print(min_data)
-
-# 	formate_time = 150
-
-# 	# capital = 3000           # 每組配對資金300萬
-# 	# maxi = 5                 # 股票最大持有張數
-# 	# open_time = 1.5                 # 開倉門檻倍數
-# 	# stop_loss_time = 10                  # 停損門檻倍數
-# 	# tax_cost = 0
-# 	l_table = len(table.index)
-# 	for i in range(l_table):
-# 		print(i)
-# 		y = table.iloc[i,:]
-# 		print(y)
-# 		tmp = pairs( i , formate_time , y , min_data , tick_data , open_time , stop_loss_time , day1 , maxi , tax_cost , capital )
-# 		print(tmp)
-
-
-
-
-
-
-	# prev_time = 0
-	# with open('20190702_stock.csv','r', encoding="big5") as myFile:
-	# 	lines=csv.reader(myFile)
-	# 	for line in lines:
-	# 		if (line[0] in tracking_list) and (int(line[6][0:4]) >= 1130):
-	# 			if int(line[6][0:4]) != prev_time:
-	# 				print(prev_time)
-	# 				prev_time = int(line[6][0:4])
-	# 			print(line)
-			# time.sleep(0.01)
-			# n = n - 1
-			# if n == 0:
-			# 	time.sleep(0.1)
-			# 	n = 50
-	
-	# for i,r in df.iterrows():
-	# 	print(r)

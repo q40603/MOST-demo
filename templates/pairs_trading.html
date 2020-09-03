@@ -62,13 +62,20 @@
 				  <h3>配對</h3>
 					<table class="ui celled table accordion">
 					  <thead>
+						<tr><th colspan="5" class=' center aligned '>
+							<h3 id="pair_compute"></h3>
+						  </th>
+						</tr>
 						<tr>
 						<th class=' center aligned '>股票 1</th>
 						<th class=' center aligned '>股票 2</th>
 						<th class=' center aligned '>權重 1</th>
 						<th class=' center aligned '>權重 2</th>
+						<th class=' center aligned '>交易策略</th>
 						<th class=' center aligned '>開始交易</th>
-					  </tr></thead>
+					  </tr>
+
+					</thead>
 					  <tbody id="pair">
 					  </tbody>
 					</table>			  
@@ -210,15 +217,15 @@
 					risk = ['#94fa7a;', '#fa7575' , '#ffffff']
 					buy = ["Short", "Long", "Neutral"]
 					text = ""
-					if (data.length==0){
-						text = "<h3 style='padding:5vh;'>無適合交易的股票配對 。</h3>"
-					}
+					// if (data.length==0){
+					// 	text = "<h3 style='padding:5vh;'>無適合交易的股票配對 。</h3>"
+					// }
+					
+					document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
 					for (var i = 0 ; i < data.length; i++){
-						pos1 = Math.floor((Math.random() * 10) + 1)%3
-						pos2 = Math.floor((Math.random() * 10) + 1)%3
 						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["stock1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["stock2"] + "</td>";
 	
-						console.log(data[i]["w1"])
+						//console.log(data[i]["w1"])
 						if(data[i]["w1"]<0){
 							text += "<td class=' center aligned ' style='background:#94fa7a;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
 						}
@@ -231,9 +238,11 @@
 						else{
 							text += "<td class=' center aligned ' style='background:#fa7575;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
 						}
-	
+						
+
+						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>"
 						// "<td class=' center aligned' style='background:" + risk[pos1] + ";'>" + buy[pos1]+ "</td><td class=' center aligned' style='background:" + risk[pos2]+ ";' >" + buy[pos2] +
-						text += "</td><td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
+						text += "</td><td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
 	
 						// text += "<tr class='styled accordion' style='display:none'> " + "<td class=' center aligned ' >" + '公司' + "</td>" + "<td class=' center aligned ' >" + '新聞標題' + "</td>" + "<td class=' center aligned ' >" + '時間' + "</td>" + "<td class=' center aligned ' >" + '新聞內容' + "</td>" + "<td class=' center aligned ' >" + '漲跌預測' + "</td>";
 					}
@@ -245,6 +254,9 @@
 
 	function start_trade(){
 		$(".trade").click(function() {
+		console.log($(this))
+		var model_type = $(this).attr('data-model_type');
+		var action = $(this).attr('data-action');
 		var w1 = $(this).attr('data-w1');
 		var w2 = $(this).attr('data-w2');
 		var s1 = $(this).attr('data-s1');
@@ -260,9 +272,12 @@
 				type:"GET",
 				dataType: 'json',
 				url: "/stock/get_pairs_price",
-				data : { 's1' : "s_" + s1, 's2' : "s_" + s2 , "trade_date" : day, 'w1' : w1, 'w2' : w2 },
+				data : { 's1' : "s_" + s1, 's2' : "s_" + s2 , "trade_date" : day, 'w1' : w1, 'w2' : w2, "model_type" : model_type, "action" : action },
 				success: function(response) {
 					data = JSON.parse(response);
+					console.log(data);
+					$("#open").val(data.thresold[0]);
+					$("#stop").val(data.thresold[1]);
 					var processed_json = new Array();
 					for (i = 0; i < data["s1"].length; i++) {
 						processed_json.push([Date.parse(data["s1"][i].mtimestamp), parseFloat(data["s1"][i].avg_price)]);
@@ -286,7 +301,6 @@
 	
 							// draw chart
 					Highcharts.stockChart('container1', {
-	
 					  time: {
 						useUTC: false
 					  },
@@ -311,6 +325,9 @@
 					  title: {
 						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " 股價"
 					  },
+					  subtitle: {
+						text: "std: " + String(parseFloat(data["s1_std"]).toFixed(4))
+						},
 	
 					  exporting: {
 						enabled: false
@@ -371,6 +388,9 @@
 					  title: {
 						text: data["s2_info"]["s_name"] + " (" + s2 + ") " + " 股價"
 					  },
+					  subtitle: {
+						text: "std: " +String(parseFloat(data["s2_std"]).toFixed(4))
+						},
 						xAxis: {
 							type: 'datetime',
 	
@@ -397,18 +417,32 @@
 	
 					var processed_json3 = new Array();
 	
-	
+					var max_spread = -Infinity;
+					var min_spread = Infinity;
 					for (i = 0; i < data["spread"].length; i++) {
 						processed_json3.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread"][i].avg_price)]);
-	
+						//processed_json3.push([i, parseFloat(data["spread"][i].avg_price)]);
+						max_spread = Math.max(max_spread, data["spread"][i].avg_price);
+						min_spread = Math.min(min_spread, data["spread"][i].avg_price);
 					}
-	
+					var processed_json3_1 = new Array();
+					var spread_m_l = data["spread_m"].length + 15;
+					for (i = 14; i < data["spread"].length; i++) {
+						if(i<spread_m_l){
+							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-14])]);
+						}
+						else{
+							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
+						}
+						
+					}	
+					console.log(processed_json3_1);		
 	
 							// draw chart
-					Highcharts.stockChart('container3', {
-						// chart: {
-						// 	height: (8 / 16 * 100) + '%' // 16:9 ratio
-						// },
+					var chart3 = Highcharts.stockChart('container3', {
+						chart: {
+							zoomType: 'xy',
+						},	
 						legend: {
 						x:0,
 						y: 0,
@@ -441,6 +475,8 @@
 						selected: 2
 					  },
 						yAxis: {
+							max : Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
+							min : Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
 							plotLines: [
 							// {
 							// 	value: parseFloat(mu),
@@ -450,35 +486,35 @@
 							// 		text: 'mean'
 							// 	}
 							// },
+							// {
+							// 	value: parseFloat(e_mu),
+							// 	color: '#02d41b',
+							// 	width: 2,
+							// 	name : "Exptected mean"
+							// 	// label: {
+							// 	// 	text: 'expected mean'
+							// 	// }
+							// },
 							{
-								value: parseFloat(e_mu),
-								color: '#02d41b',
-								width: 2,
-								name : "Exptected mean"
-								// label: {
-								// 	text: 'expected mean'
-								// }
-							},
-							{
-								value: parseFloat(e_mu) + 1.5 * parseFloat(e_stdev),
+								value: parseFloat(e_mu) + parseFloat(data.thresold[0]) * parseFloat(e_stdev),
 								color: '#3A97F4',
 								width: 1,
 								dashStyle: 'shortdash'
 							},
 							{
-								value: parseFloat(e_mu) - 1.5 * parseFloat(e_stdev),
+								value: parseFloat(e_mu) - parseFloat(data.thresold[0]) * parseFloat(e_stdev),
 								color: '#3A97F4',
 								width: 1,
 								dashStyle: 'shortdash'
 							},	
 							{
-								value: parseFloat(e_mu) + 2.5 * parseFloat(e_stdev),
+								value: parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev),
 								color: '#EB1E1E',
 								width: 1,
 								dashStyle: 'shortdash'
 							},
 							{
-								value: parseFloat(e_mu) - 2.5 * parseFloat(e_stdev),
+								value: parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev),
 								color: '#EB1E1E',
 								width: 1,
 								dashStyle: 'shortdash'
@@ -507,33 +543,41 @@
 						scrollbar: {
 							enabled: false
 						},
-					  series: [{
+					  series: [
+						{
 						name: "spread",
 						data: processed_json3,
 						color: '#875F9A'
-					  }, {
-						marker: {
-							enabled: false
-						},
-						name: 'Expected mean',
-						plotLinesIndex: 0,
+						}, 
+						{
+						name: "Expected mean",
+						data: processed_json3_1,
 						color: '#02d41b'
-					},
-					{
-						marker: {
-							enabled: false
-						},
-						name: 'Open',
-						plotLinesIndex: 1,
-						color: '#3A97F4'
-					},					{
-						marker: {
-							enabled: false
-						},
-						name: 'Stop',
-						plotLinesIndex: 2,
-						color: '#EB1E1E'
-					},]
+						}, 
+						// {
+						// 	marker: {
+						// 		enabled: false
+						// 	},
+						// 	name: 'Expected mean',
+						// 	plotLinesIndex: 0,
+						// 	color: '#02d41b'
+						// },
+						{
+							marker: {
+								enabled: false
+							},
+							name: 'Open',
+							plotLinesIndex: 1,
+							color: '#3A97F4'
+						},					
+						{
+							marker: {
+								enabled: false
+							},
+							name: 'Stop',
+							plotLinesIndex: 2,
+							color: '#EB1E1E'
+						}]
 					});
 	
 			$( "#pairs_table" ).hide(500);
@@ -580,7 +624,7 @@
 					}
 	
 	
-			start_backtest(day, s1, s2);
+			start_backtest(day, s1, s2, data.thresold[0], data.thresold[1]);
 			}
 		 });
 	
@@ -591,12 +635,12 @@
 		}); 	
 	}
 	
-	function start_backtest(day, s1, s2){
+	function start_backtest(day, s1, s2, open, stop){
 		$.ajax({
 				type:"GET",
 				dataType: 'json',
 				url: "/stock/trade_backtest",
-				data : { 's1' : s1, 's2' : s2, "trade_date" : day },
+				data : { 's1' : s1, 's2' : s2, "trade_date" : day, "open": open, "stop": stop },
 				success: function(response) {
 					data = JSON.parse(response);
 					// console.log(data);

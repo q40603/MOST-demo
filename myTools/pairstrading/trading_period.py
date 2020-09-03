@@ -51,7 +51,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
         
     close = table.e_mu[pair]                                                        # 平倉(均值)
         
-    M = round( 1/table.zcr[pair] )  if (len(spread) >= 115 and table.zcr[pair] != 0 ) else 0                                  # 平均持有時間
+    M = 0 #round( 1/table.zcr[pair] )  if (len(spread) >= 115 and table.zcr[pair] != 0 ) else 0                                  # 平均持有時間
         
     trade = 0                                                                     # 計算開倉次數
     #discount = 1
@@ -84,6 +84,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 spread1 = w1 * np.log( stock1_seq ) + w2 * np.log( stock2_seq )
                 
                 if w1*w2==0:
+                    print("w1,w2==0")
                     continue
                 position = -1
                 
@@ -105,6 +106,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 spread1 = w1 * np.log(stock1_seq) + w2 * np.log(stock2_seq)
                     
                 if w1*w2==0:
+                    print("w1,w2==0")
                     continue
                 position = 1
                 
@@ -248,7 +250,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
             if ( spread[i] - close ) * ( spread[i+1] - close ) < 0 :
                 
                                                                                                        # 平倉
-                position = -2  
+                position = 0  
                 
                 stock1_payoff = w1 * slip( tick_data[table.stock1[pair]][(i+2)] , table.w1[pair] )
                 
@@ -259,6 +261,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
                 tmp_profit = math.ceil(tmp_profit*1000)
+                #print("碰到停損門檻，強制平倉", int(w1), stock1_payoff, int(w2), stock2_payoff)
                 trade_status += "碰到均值，平多倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {}  /  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff, tmp_profit)    
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
@@ -276,7 +279,7 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
                 tmp_profit = math.ceil(tmp_profit*1000)
-                trade_status += "碰到停損門檻，強制平倉 {} &nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp{} /  {}".format(int(w1), stock1_payoff, int(w2), stock2_payoff, tmp_profit)    
+                trade_status += "碰到停損門檻，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(-w1), table.stock1.values[0], stock1_payoff, int(-w2), table.stock2.values[0], stock2_payoff, tmp_profit) 
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
             #elif adfuller( spread1 , regression='ct' )[1] > 0.05 :
@@ -353,7 +356,6 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
                 
                 tmp_profit = stock1_profit[-1] + stock1_payoff + stock2_profit[-1] + stock2_payoff
                 tmp_profit = math.ceil(tmp_profit*1000)
-
                 trade_status += "回測結束，強制平倉 <br>{}&nbsp張&nbsp{}&nbsp {}  &nbsp&nbsp&nbsp  {}&nbsp張&nbsp{}&nbsp  {} /  {}".format(int(w1), table.stock1.values[0], stock1_payoff, int(w2), table.stock2.values[0], stock2_payoff, tmp_profit)    
                 #每次交易報酬做累加(最後除以交易次數做平均)
                 
@@ -387,8 +389,8 @@ def pairs( pair , formate_time , table , min_data , tick_data , open_time , stop
         stock1_profit.append(stock1_payoff)
             
         stock2_profit.append(stock2_payoff)
-        if(no_more):
-            break
+        # if(no_more):
+        #     break
         trade_history.append(trade_status)
 
     

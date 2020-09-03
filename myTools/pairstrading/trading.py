@@ -124,7 +124,7 @@ if __name__ == '__main__':
             
             m1 = accelerate_trading.trading(table , formate_time , day1_2 , day1_tick_2 , k1 , k2 , day1 , maxi , 0 , capital)
 
-            m2 = accelerate_trading.trading(table , formate_time , day1_2 , day1_tick_2 , k1 , k2 , day1 , maxi , 0.003 , capital)
+            #m2 = accelerate_trading.trading(table , formate_time , day1_2 , day1_tick_2 , k1 , k2 , day1 , maxi , 0.003 , capital)
             
             result  = accelerate_trading.trading.backtest_table(m1)                                                                                                                                                                                              
             result1 = accelerate_trading.trading.backtest_table(m2)

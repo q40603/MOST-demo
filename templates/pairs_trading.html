@@ -188,21 +188,30 @@
 						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["stock1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["stock2"] + "</td>";
 	
 						if(data[i]["w1"]<0){
-							text += "<td class=' center aligned ' style='background:#94fa7a;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
+							text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
 						}
 						else{
-							text += "<td class=' center aligned ' style='background:#fa7575;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"						
+							text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"						
 						}
 						if(data[i]["w2"]<0){
-							text += "<td class=' center aligned ' style='background:#94fa7a;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
+							text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
 						}
 						else{
-							text += "<td class=' center aligned ' style='background:#fa7575;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
+							text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
 						}
 						
 
 						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
-						text += "<td class=' center aligned '>"  + String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
+						if (data[i]["rt"]<0){
+							text += "<td class=' center aligned ' style='background:#acff80;'>"
+						}
+						else if (data[i]["rt"]>0){
+							text += "<td class=' center aligned ' style='background:#ff8080;'>"
+						}
+						else{
+							text += "<td class=' center aligned '>"
+						}
+						text += String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
 						text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
 
 					}

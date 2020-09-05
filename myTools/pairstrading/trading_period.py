@@ -57,28 +57,28 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
     use_adf = False
 
     trade_process = []
-    # 波動太小的配對不開倉
-    if (up_open_time + down_open_time) *e_stdev < cost_gate:
-        trade_process.append([tick_data.mtimestamp[1], "配對波動太小，不開倉"])
-        # print("配對波動太小，不開倉")
-        trading_profit = 0
-        trade = 0
-        local_profit = 0
-        local_open_num = 0
-        local_rt = 0
-        local_std = 0
-        local_skew = 0
-        local_timetrend = 0
-        position = 0
-        return  {
-            'trade_history' : trade_process , 
-            "local_profit" : local_profit , 
-            "local_open_num" : local_open_num,
-            "trade_capital" :trade_capital,
-            "local_rt" : "0.000",
-            # "profit" : trading_profit
-        }
-        # return local_profit, local_open_num, trade_capital, trading, trade_process
+    # # 波動太小的配對不開倉
+    # if (up_open_time + down_open_time) *e_stdev < cost_gate:
+    #     trade_process.append([tick_data.mtimestamp[1], "配對波動太小，不開倉"])
+    #     # print("配對波動太小，不開倉")
+    #     trading_profit = 0
+    #     trade = 0
+    #     local_profit = 0
+    #     local_open_num = 0
+    #     local_rt = 0
+    #     local_std = 0
+    #     local_skew = 0
+    #     local_timetrend = 0
+    #     position = 0
+    #     return  {
+    #         'trade_history' : trade_process , 
+    #         "local_profit" : local_profit , 
+    #         "local_open_num" : local_open_num,
+    #         "trade_capital" :trade_capital,
+    #         "local_rt" : "0.000",
+    #         # "profit" : trading_profit
+    #     }
+    #     # return local_profit, local_open_num, trade_capital, trading, trade_process
 
 
     t = formate_time  # formate time
@@ -106,9 +106,8 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
     pos = [0, 0]
     stock1_profit = []
     stock2_profit = []
-    for i in range(1, len(spread) - 2):
-
-        if position == 0 and i != len(spread) - 3:  # 之前無開倉
+    for i in range(1, len(spread) - 6):
+        if position == 0 and i != len(spread) - 7:  # 之前無開倉
             if (spread[i] - up_open) * (spread[i + 1] - up_open) < 0 and spread[i + 1] < (close + stop_loss):  # 碰到上開倉門檻且小於上停損門檻
                 # 資金權重轉股票張數，並整數化
                 
@@ -180,7 +179,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 trade_process.append([tick_data.mtimestamp[i],"碰到上停損門檻，強制平倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
 
-            elif i == (len(spread) - 3):  # 回測結束，強制平倉
+            elif i == (len(spread) - 7):  # 回測結束，強制平倉
                 # trade_process.append([tick_data.mtimestamp[i],"回測結束，強制平倉<br>"])
                 # print(tick_data.mtimestamp[i],"回測結束，強制平倉")
                 position = -4
@@ -218,7 +217,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 trade_process.append([tick_data.mtimestamp[i],"碰到下停損門檻，強制平倉<br>", w1, w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
 
-            elif i == (len(spread) - 3):  # 回測結束，強制平倉
+            elif i == (len(spread) - 7):  # 回測結束，強制平倉
                 
                 # print(tick_data.mtimestamp[i],"回測結束，強制平倉")
                 position = -4
@@ -265,14 +264,14 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
         position = 0
 
     else:  # 計算平均報酬
-        spread2 = w1 * np.log(min_data[s1].iloc[0:t]) + w2 * np.log(min_data[s2].iloc[0:t])
+        # spread2 = w1 * np.log(min_data[s1].iloc[0:t]) + w2 * np.log(min_data[s2].iloc[0:t])
 
-        x = np.arange(0, t)
-        b1, b0 = np.polyfit(x, spread2, 1)
-        local_rt = str(trading_profit/trade_capital)[:8]
-        local_std = np.std(spread2)
-        local_skew = skew(spread2)
-        local_timetrend = b1
+        # x = np.arange(0, t)
+        # b1, b0 = np.polyfit(x, spread2, 1)
+        local_rt = trading_profit/trade_capital
+        # local_std = np.std(spread2)
+        # local_skew = skew(spread2)
+        # local_timetrend = b1
 
         trade_process.append(["總損益", trading_profit])
 

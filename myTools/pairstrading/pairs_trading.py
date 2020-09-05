@@ -122,7 +122,7 @@ def spread_mean(stock1,stock2,table):
 
 def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 	fin_db.ping(reconnect = True)
-	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+	query1 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
 	fin_cursor.execute(query1)
 	result1 = fin_cursor.fetchall()
 	fin_db.commit()
@@ -133,7 +133,7 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 	stock_1 = df.fillna(method='backfill')
 	stock_1 = stock_1.reset_index()
 
-	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+	query2 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
 	fin_cursor.execute(query2)
 	result2 = fin_cursor.fetchall()
 	fin_db.commit()
@@ -144,8 +144,31 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 	stock_2 = df.fillna(method='backfill')
 	stock_2 = stock_2.reset_index()
 
-	stock1_std = stock_1["avg_price"].std() 
-	stock2_std = stock_2["avg_price"].std() 
+
+	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+	fin_cursor.execute(query1)
+	result1 = fin_cursor.fetchall()
+	fin_db.commit()
+	df = pd.DataFrame(list(result1))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
+	df = df.fillna(method='ffill')
+	stock_1_min = df.fillna(method='backfill')
+	stock_1_min = stock_1_min.reset_index()
+
+	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+	fin_cursor.execute(query2)
+	result2 = fin_cursor.fetchall()
+	fin_db.commit()
+	df = pd.DataFrame(list(result2))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
+	df = df.fillna(method='ffill')
+	stock_2_min = df.fillna(method='backfill')
+	stock_2_min = stock_2_min.reset_index()	
+
+	stock1_std = stock_1_min["avg_price"].std() 
+	stock2_std = stock_2_min["avg_price"].std() 
 
 	spread = pd.DataFrame()
 	spread["mtimestamp"] = stock_2["mtimestamp"]
@@ -160,7 +183,7 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 		"model_type" : model_type
 	}
 
-	spread_m = spread_mean(stock_1["avg_price"], stock_2["avg_price"], table )
+	spread_m = spread_mean(stock_1_min["avg_price"], stock_2_min["avg_price"], table )
 	return {
 		"s1" : stock_1.to_dict("records"),
 		"s1_std" : stock1_std,
@@ -172,7 +195,7 @@ def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
 
 def get_all_pairs(choose_date):
 	fin_db.ping(reconnect = True)
-	query = "select stock1, stock2, w1, w2, model_type, snr, zcr, mu, stdev, e_mu, e_stdev, action from pairs where f_date = '" + choose_date + "' ;"
+	query = "select stock1, stock2, w1, w2, model_type, snr, zcr, mu, stdev, e_mu, e_stdev, action, rt from pairs where f_date = '" + choose_date + "' order by rt desc;"
 	fin_cursor.execute(query)
 	data = fin_cursor.fetchall()
 	return json.dumps(data)

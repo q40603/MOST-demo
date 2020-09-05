@@ -62,7 +62,7 @@
 				  <h3>配對</h3>
 					<table class="ui celled table accordion">
 					  <thead>
-						<tr><th colspan="5" class=' center aligned '>
+						<tr><th colspan="6" class=' center aligned '>
 							<h3 id="pair_compute"></h3>
 						  </th>
 						</tr>
@@ -72,6 +72,7 @@
 						<th class=' center aligned '>權重 1</th>
 						<th class=' center aligned '>權重 2</th>
 						<th class=' center aligned '>交易策略</th>
+						<th class=' center aligned '>報酬率</th>
 						<th class=' center aligned '>開始交易</th>
 					  </tr>
 
@@ -200,8 +201,9 @@
 						}
 						
 
-						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>"
-						text += "</td><td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
+						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
+						text += "<td class=' center aligned '>"  + String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
+						text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
 
 					}
 					document.getElementById("pair").innerHTML = text;
@@ -384,10 +386,10 @@
 						min_spread = Math.min(min_spread, data["spread"][i].avg_price);
 					}
 					var processed_json3_1 = new Array();
-					var spread_m_l = data["spread_m"].length + 15;
-					for (i = 15; i < data["spread"].length; i++) {
+					var spread_m_l = data["spread_m"].length + 16;
+					for (i = 16; i < data["spread"].length; i++) {
 						if(i<spread_m_l){
-							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-15])]);
+							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
 						}
 						else{
 							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);

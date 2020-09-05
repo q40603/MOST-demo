@@ -81,9 +81,21 @@
 					</table>			  
 			</div>
 			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 100vh;">
-				<div class="eight wide column" id="trade_result" style="height: 100vh; overflow-y: scroll;">
-	
-						<table class="ui orange very basic collapsing celled table" style="display: inline-block;">
+				<div class="eight wide column" id="trade_result" style="height: 120vh; overflow-y: scroll;">
+					<table class="ui red celled striped table">
+						<thead>
+						  <tr>
+							  <th colspan="2">配對資訊</th>
+							  <th colspan="2">交易資訊</th>
+						</tr></thead>
+						<tbody id="pairs_info">
+								<tr>
+									<td class="center aligned" colspan="2"></td>
+									<td class="center aligned" colspan="2"></td>
+								</tr>
+						</tbody>
+					  </table>	
+						<!-- <table class="ui orange very basic collapsing celled table" style="display: inline-block;">
 						  <thead>
 							<tr><th colspan="2">配對資訊</th>
 						  </tr></thead>
@@ -120,17 +132,17 @@
 									  <td><div class="ui mini input"><input id="invest" type="text" name="open" value="300" style="width: 4vw"></div> 萬</td>
 								  </tr>
 						  </tbody>
-						</table>
+						</table> -->
 	
-						<table class="ui green very basic collapsing celled table" style="display: inline-block; margin-left: 4vw;">
+						<!-- <table class="ui green very basic collapsing celled table" style="display: inline-block; margin-left: 4vw;">
 						  <thead>
 							<tr><th colspan="2">交易結果</th>
 						  </tr></thead>
 						  <tbody id="trade_result_table">
 								  <tr><td class="center aligned" colspan="2"> 計算中 .... </td></tr>
 						  </tbody>
-						</table>
-					<table class="ui blue celled striped table" style="max-height: 25vh; overflow-y: scroll;">
+						</table> -->
+					<table class="ui teal celled striped table" style="max-height: 20vh; overflow-y: scroll;">
 					  <thead>
 						<tr>
 						<tr><th>公司</th>
@@ -143,7 +155,7 @@
 							  <tr>	<td class="center aligned" colspan="2"> 新聞爬取中 .... </td></tr>
 					  </tbody>
 					</table>				
-					<table class="ui blue celled striped table" style="height: 40vh; overflow-y: scroll;" id="trade_history">
+					<table class="ui blue celled striped table" style="max-height: 50vh; overflow-y: scroll;" id="trade_history">
 					  <thead>
 						<tr>
 							<th>交易過程</th>
@@ -557,8 +569,16 @@
 					});
 //------------------------------------------------------------------------------------------------------/
 					var processed_json4 = new Array();
-					for (i = 0; i < data["sb_pred"]["prob"].length; i++) {
-						processed_json4.push([Date.parse(data["s2"][i+150].mtimestamp), parseFloat(data["sb_pred"]["prob"][i])]);
+					for (i = 0; i < data["spread"].length; i++) {
+						if(i<150){
+							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), 0]);
+						}
+						else if(i>=265){
+							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), 0]);
+						}
+						else{
+							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), parseFloat(data["sb_pred"]["prob"][i-150])]);
+						}		
 					}
 					// console.log(processed_json2);
 	
@@ -619,7 +639,22 @@
 			$( "#go_trade" ).show();
 			$( "#pairs_found" ).removeClass( "active" );
 			$( "#trade_result" ).addClass( "active" );
-			pairs_info = "<tr><td class=' center aligned '> Expected mean" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + "</tr>" + "<tr>" + "<td class=' center aligned '> Expected stdev" +"</td>" + "<td class=' center aligned '>" + String(parseFloat(stdev).toFixed(4)) + "</td>" + "<tr>" + "<td class=' center aligned '>" + String(s1) + " 權重" +"</td>" + "<td class=' center aligned '>" + String(parseFloat(w1).toFixed(4)) + "</td>" + "</tr>" + "<tr>" + "<td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + "<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" + "</tr>" ;
+			pairs_info = "<tr><td class=' center aligned '> Expected mean" + "</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + 
+			"<td class=' center aligned '> 開倉門檻 " + "</td>" +
+			"<td class=' center aligned '>" + data.thresold[0].toFixed(4) + "</td></tr>" +
+			"<tr><td class=' center aligned '> Expected stdev" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(e_stdev).toFixed(4)) + "</td>" + 
+			"<td class=' center aligned '> 停損門檻 " + "</td>" +
+			"<td class=' center aligned '>" + data.thresold[1].toFixed(4) + "</td></tr>" +
+			"<tr><td class=' center aligned '>" + String(s1) + " 權重" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(w1).toFixed(4)) + "</td>" + 
+			"<td class=' center aligned '> 股票最大持有張數" + "</td>" +
+			"<td class=' center aligned '>5</td></tr>" +
+			"<tr><td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" +
+			"<td class=' center aligned '> 交易成本" + "</td>" +
+			"<td class=' center aligned '>0.000%</td></tr>";
 			document.getElementById("pairs_info").innerHTML = pairs_info;
 	
 				trade_news_table = "";
@@ -722,7 +757,7 @@
 					//trade_result_table += + "<tr>"+ "<td class=' center aligned '>" + "報酬" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["profit"])) + " </td>" + "</tr>";
 					//console.log(trade_result_table);
 					document.getElementById("trade_history").innerHTML = trade_history_table
-					document.getElementById("trade_result_table").innerHTML = trade_result_table;  
+					// document.getElementById("trade_result_table").innerHTML = trade_result_table;  
 					// re_trade(day, s1, s2);
 				}
 			

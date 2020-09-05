@@ -80,8 +80,8 @@
 					  </tbody>
 					</table>			  
 			</div>
-			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 75vh;">
-				<div class="eight wide column" id="trade_result" style="height: 80vh; overflow-y: scroll;">
+			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 100vh;">
+				<div class="eight wide column" id="trade_result" style="height: 100vh; overflow-y: scroll;">
 	
 						<table class="ui orange very basic collapsing celled table" style="display: inline-block;">
 						  <thead>
@@ -143,23 +143,24 @@
 							  <tr>	<td class="center aligned" colspan="2"> 新聞爬取中 .... </td></tr>
 					  </tbody>
 					</table>				
-					<table class="ui blue celled striped table" style="height: 35vh; overflow-y: scroll;">
+					<table class="ui blue celled striped table" style="height: 40vh; overflow-y: scroll;" id="trade_history">
 					  <thead>
 						<tr>
-							<th>交易時間</th>
-							<th>細節</th>
-							<th>損益</th>
+							<th>交易過程</th>
+							<!-- <th>細節</th>
+							<th>損益</th> -->
 					  </tr></thead>
 	
-					  <tbody id="trade_history">
+					  <tbody>
 							  <tr>	<td class="center aligned" colspan="2"> 計算中 .... </td></tr>
 					  </tbody>
 					</table>				
 				</div>
 				<div class="eight wide column">
-				<div id="container1" style="height: 28%; min-width: 100%; "></div>
-				<div id="container2" style="height: 28%; min-width: 100%;  "></div>
-				<div id="container3" style="height: 50%; min-width: 100%; "></div>
+				<div id="container1" style="height: 25vh; min-width: 100%; "></div>
+				<div id="container2" style="height: 25vh; min-width: 100%;  "></div>
+				<div id="container3" style="min-width: 100%; "></div>
+				<div id="container4" style="height: 25vh; min-width: 100%; "></div>
 				</div>
 			</div>
 	
@@ -326,7 +327,7 @@
 						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " 股價"
 					  },
 					  subtitle: {
-						text: "std: " + String(parseFloat(data["s1_std"]).toFixed(4))
+						text: "Price std: " + String(parseFloat(data["s1_std"]).toFixed(4))
 						},
 	
 					  exporting: {
@@ -389,7 +390,7 @@
 						text: data["s2_info"]["s_name"] + " (" + s2 + ") " + " 股價"
 					  },
 					  subtitle: {
-						text: "std: " +String(parseFloat(data["s2_std"]).toFixed(4))
+						text: "Price std: " +String(parseFloat(data["s2_std"]).toFixed(4))
 						},
 						xAxis: {
 							type: 'datetime',
@@ -427,9 +428,9 @@
 					}
 					var processed_json3_1 = new Array();
 					var spread_m_l = data["spread_m"].length + 15;
-					for (i = 14; i < data["spread"].length; i++) {
+					for (i = 15; i < data["spread"].length; i++) {
 						if(i<spread_m_l){
-							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-14])]);
+							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-15])]);
 						}
 						else{
 							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
@@ -478,23 +479,6 @@
 							max : Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
 							min : Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
 							plotLines: [
-							// {
-							// 	value: parseFloat(mu),
-							// 	color: '#34C782',
-							// 	width: 2,
-							// 	label: {
-							// 		text: 'mean'
-							// 	}
-							// },
-							// {
-							// 	value: parseFloat(e_mu),
-							// 	color: '#02d41b',
-							// 	width: 2,
-							// 	name : "Exptected mean"
-							// 	// label: {
-							// 	// 	text: 'expected mean'
-							// 	// }
-							// },
 							{
 								value: parseFloat(e_mu) + parseFloat(data.thresold[0]) * parseFloat(e_stdev),
 								color: '#3A97F4',
@@ -532,7 +516,7 @@
 							plotLines: news1.concat(news2)
 						},
 					  title: {
-						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " + " + data["s2_info"]["s_name"] + " (" + s2 + ") " + " spread"
+						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " + " + data["s2_info"]["s_name"] + " (" + s2 + ") " + " 共整合序列"
 					  },
 						navigator: {
 							enabled: false
@@ -554,14 +538,6 @@
 						data: processed_json3_1,
 						color: '#02d41b'
 						}, 
-						// {
-						// 	marker: {
-						// 		enabled: false
-						// 	},
-						// 	name: 'Expected mean',
-						// 	plotLinesIndex: 0,
-						// 	color: '#02d41b'
-						// },
 						{
 							marker: {
 								enabled: false
@@ -579,7 +555,64 @@
 							color: '#EB1E1E'
 						}]
 					});
+//------------------------------------------------------------------------------------------------------/
+					var processed_json4 = new Array();
+					for (i = 0; i < data["sb_pred"]["prob"].length; i++) {
+						processed_json4.push([Date.parse(data["s2"][i+150].mtimestamp), parseFloat(data["sb_pred"]["prob"][i])]);
+					}
+					// console.log(processed_json2);
 	
+							// draw chart
+					Highcharts.stockChart('container4', {
+	
+					  time: {
+						useUTC: false
+					  },
+	
+					  rangeSelector: {
+						buttons: [{
+						  count: 1,
+						  type: 'minute',
+						  text: '1M'
+						}, {
+						  count: 5,
+						  type: 'minute',
+						  text: '5M'
+						}, {
+						  type: 'all',
+						  text: 'All'
+						}],
+						inputEnabled: false,
+						selected: 2
+					  },
+						navigator: {
+							enabled: false
+						},
+					  title: {
+						text: "Structure Break Prediction"
+					  },
+						xAxis: {
+							type: 'datetime',
+	
+							dateTimeLabelFormats : {
+								hour: '%I %p',
+								minute: '%I:%M %p'
+							},
+							plotLines: news2
+						},  
+	
+					  exporting: {
+						enabled: false
+					  },
+						scrollbar: {
+							enabled: false
+						},
+					  series: [{
+						name: s2,
+						data: processed_json4,
+						color: '#FF0000'
+					  }]
+					});	
 			$( "#pairs_table" ).hide(500);
 			$( "#time_pick" ).hide();
 			$( "#pairs_chart" ).show( 500 );
@@ -602,7 +635,6 @@
 						}
 						for (i = 0; i < data["s2_news"].length; i++) {
 							tmp = data["s2_news"][i];
-							
 							trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
 	
 	
@@ -640,93 +672,111 @@
 				type:"GET",
 				dataType: 'json',
 				url: "/stock/trade_backtest",
-				data : { 's1' : s1, 's2' : s2, "trade_date" : day, "open": open, "stop": stop },
+				data : { 's1' : s1, 's2' : s2, "trade_date" : day},
 				success: function(response) {
 					data = JSON.parse(response);
-					// console.log(data);
-					trade_history_table = "";
+					console.log(data);
+					trade_history_table ="<thead><tr><th class=' center aligned '>交易時間</th><th class=' center aligned '>細節</th><th class=' center aligned '>" + s1 + "</th><th class=' center aligned '>" + s2 + "</th><th class=' center aligned '>現金流(K)</th></tr></thead><tbody>";
 					trade_news_table = ""
-					// console.log(data["trade_history"].length);
-					if (data["trade_history"].length == 0){
-						trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無任何交易" + "</td>" + "</tr>" ;
+					
+					var trade_history_length = data["trade_history"].length-1;
+					for (i = 0; i < trade_history_length; i++) {
+						tmp = data["trade_history"][i]
+
+						if(String(tmp[1]).includes("強制平倉")){
+							trade_history_table += "<tr class='error'>"
+						}
+						else{
+							// if (i%2){
+							// 	trade_history_table += "<tr style='border: 2px solid black;'>";
+							// }
+							// else{
+							trade_history_table += "<tr>";
+							// }
+						}
+						trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>";
+						if(tmp[2] < 0){
+							trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp[2] + "</td>";
+						}
+						else{
+							trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp[2] + "</td>";
+						}
+						if(tmp[3]<0){
+							trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp[3]  + "</td>";
+						}
+						else{
+							trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp[3] + "</td>";
+						}
+						trade_history_table += "<td class=' center aligned '>" + tmp[4].toFixed(4) + "</td></tr>"
+					}
+					
+					if(trade_history_length==0){
+						trade_history_table +=  "</tbody>  <tfoot><tr><th class=' center aligned '>" + data["trade_history"][trade_history_length][0] + "</th><th class=' center aligned '>" + data["trade_history"][trade_history_length][1] + "</th><th></th><th></th><th></th></tr></tfoot>"	            	
 					}
 					else{
-						for (i = 0; i < data["trade_history"].length; i++) {
-							tmp = data["trade_history"][i].split("/");
-							// console.log(tmp);
-							if (String(tmp[1]).includes("，上開倉") || String(tmp[1]).includes("，下開倉")){
-								trade_history_table += "<tr class='positive'>"
-							}
-							else if(String(tmp[1]).includes("結構性斷裂") || String(tmp[1]).includes("強制平倉")){
-								trade_history_table += "<tr class='error'>"
-							}
-							else{
-								trade_history_table += "<tr>";
-							}
-							trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>" + "<td class=' center aligned '>" + tmp[2] + "</td>" + "</tr>"
-						}	            	
+						trade_history_table +=  "</tbody>  <tfoot><tr><th></th><th></th><th></th><th class=' center aligned '>" + data["trade_history"][trade_history_length][0] + "</th><th class=' center aligned '>" + data["trade_history"][trade_history_length][1].toFixed(4) + "</th></tr></tfoot>"	            	
 					}
-	
-					// console.log(data["local_rt"]);
+					
+
 					trade_result_table =  "<tr>"+ "<td class=' center aligned '>" + "開倉次數" + "</td>" + "<td class=' center aligned '>" + data["local_open_num"] + "</td>" + "</tr>" + "<tr>"+ "<td class=' center aligned '>" + "報酬率" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["local_rt"]*100).toFixed(4)) + " %</td>" + "</tr>";
 					//trade_result_table += + "<tr>"+ "<td class=' center aligned '>" + "報酬" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["profit"])) + " </td>" + "</tr>";
 					//console.log(trade_result_table);
 					document.getElementById("trade_history").innerHTML = trade_history_table
 					document.getElementById("trade_result_table").innerHTML = trade_result_table;  
-					re_trade(day, s1, s2);
+					// re_trade(day, s1, s2);
 				}
 			
 		 });	
 	}
 	
-	function re_trade(day, s1, s2){
-		$("#retrade").click(function() {
-			var open_time = $("#open").val();
-			var stop_loss_time = $("#stop").val();
-			var maxi = $("#max_keep").val();
-			var tax_cost = $("#tax_cost").val();
-			var capital = $("#invest").val();
-			document.getElementById("trade_history").innerHTML = '<tr><td class="center aligned" colspan="2"> 計算中 .... </td></tr>';
-			document.getElementById("trade_result_table").innerHTML = '<tr>	<td class="center aligned" colspan="2"> 計算中 .... </td></tr>';  
-		$.ajax({
-				type:"GET",
-				dataType: 'json',
-				url: "/stock/trade_backtest_tune",
-				data : { 's1' : s1, 's2' : s2, "trade_date" : day, "open_time" : open_time, "stop_loss_time" : stop_loss_time, "maxi" : maxi, "tax_cost" : tax_cost, "capital" : capital},
-				success: function(response) {
-					data = JSON.parse(response);
-					// console.log(data);
-					trade_history_table = "";
-					// console.log(data["trade_history"].length);
-					if (data["trade_history"].length == 0){
-						trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無任何交易" + "</td>" + "</tr>" ;
-					}
-					else{
-						for (i = 0; i < data["trade_history"].length; i++) {
-							tmp = data["trade_history"][i].split("/");
-							if (String(tmp[1]).includes("，上開倉") || String(tmp[1]).includes("，下開倉")){
-								trade_history_table += "<tr class='positive'>"
-							}
-							else if(String(tmp[1]).includes("結構性斷裂") || String(tmp[1]).includes("強制平倉")){
-								trade_history_table += "<tr class='error'>"
-							}
-							else{
-								trade_history_table += "<tr>";
-							}
-							trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>" + "</tr>"
-						}	            	
-					}
+	// function re_trade(day, s1, s2){
+	// 	$("#retrade").click(function() {
+	// 		var open_time = $("#open").val();
+	// 		var stop_loss_time = $("#stop").val();
+	// 		var maxi = $("#max_keep").val();
+	// 		var tax_cost = $("#tax_cost").val();
+	// 		var capital = $("#invest").val();
+	// 		document.getElementById("trade_history").innerHTML = '<tr><td class="center aligned" colspan="2"> 計算中 .... </td></tr>';
+	// 		document.getElementById("trade_result_table").innerHTML = '<tr>	<td class="center aligned" colspan="2"> 計算中 .... </td></tr>';  
+	// 	$.ajax({
+	// 			type:"GET",
+	// 			dataType: 'json',
+	// 			url: "/stock/trade_backtest_tune",
+	// 			data : { 's1' : s1, 's2' : s2, "trade_date" : day, "open_time" : open_time, "stop_loss_time" : stop_loss_time, "maxi" : maxi, "tax_cost" : tax_cost, "capital" : capital},
+	// 			success: function(response) {
+	// 				data = JSON.parse(response);
+	// 				// console.log(data);
+	// 				trade_history_table = "";
+	// 				// console.log(data["trade_history"].length);
+	// 				if (data["trade_history"].length == 0){
+	// 					trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無任何交易" + "</td>" + "</tr>" ;
+	// 				}
+	// 				else{
+	// 					for (i = 0; i < data["trade_history"].length; i++) {
+	// 						tmp = data["trade_history"][i].split("/");
+	// 						if (String(tmp[1]).includes("，上開倉") || String(tmp[1]).includes("，下開倉")){
+	// 							trade_history_table += "<tr class='positive'>"
+	// 						}
+	// 						else if(String(tmp[1]).includes("結構性斷裂") || String(tmp[1]).includes("強制平倉")){
+	// 							trade_history_table += "<tr class='error'>"
+	// 						}
+	// 						else{
+	// 							trade_history_table += "<tr>";
+	// 						}
+	// 						trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>" + "</tr>"
+	// 					}	            	
+	// 				}
 	
-					document.getElementById("trade_history").innerHTML = trade_history_table;
-					trade_result_table =  "<tr>"+ "<td class=' center aligned '>" + "開倉次數" + "</td>" + "<td class=' center aligned '>" + data["local_open_num"] + "</td>" + "</tr>" + "<tr>"+ "<td class=' center aligned '>" + "報酬率" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["local_rt"]).toFixed(6)*100) + " %</td>" + "</tr>";
-					//console.log(trade_result_table);
-					document.getElementById("trade_result_table").innerHTML = trade_result_table;  
-					// re_trade(day, s1, s2);
-				}
-		 });				
-			// console.log(open,stop,max_keep,invest);
-		});
-	}
+	// 				document.getElementById("trade_history").innerHTML = trade_history_table;
+	// 				trade_result_table =  "<tr>"+ "<td class=' center aligned '>" + "開倉次數" + "</td>" + "<td class=' center aligned '>" + data["local_open_num"] + "</td>" + "</tr>" + "<tr>"+ "<td class=' center aligned '>" + "報酬率" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["local_rt"]).toFixed(6)*100) + " %</td>" + "</tr>";
+	// 				//console.log(trade_result_table);
+	// 				document.getElementById("trade_result_table").innerHTML = trade_result_table;  
+	// 				// re_trade(day, s1, s2);
+	// 			}
+	// 	 });				
+	// 		// console.log(open,stop,max_keep,invest);
+	// 	});
+	// }
 	
 	
 	

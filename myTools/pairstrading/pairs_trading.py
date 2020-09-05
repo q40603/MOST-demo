@@ -79,10 +79,10 @@ def spread_mean(stock1,stock2,table):
     elif table["model_type"] == 'model3':
         model = 'H1'
     #print(model)
-    stock1 = stock1[15:]
-    stock2 = stock2[15:]
-    stock1 = stock1[:150]
-    stock2 = stock2[:150]
+    # stock1 = stock1[15:]
+    # stock2 = stock2[15:]
+    stock1 = stock1[16:166]
+    stock2 = stock2[16:166]
     b1 = table["w1"]
     b2 = table["w2"]
     y = np.vstack( [stock1, stock2] ).T
@@ -181,98 +181,88 @@ def get_all_pairs(choose_date):
 
 
 
-def trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, tax_cost, pair_list):
+def trade_pair(choose_date, s1, s2):
 	fin_db.ping(reconnect = True)
-	query = "select left(stime, 16) as mtimestamp, code , sum(volume * price)/(100*sum(volume)) as avg_price from s_price_tick where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"
+	query = "select * from pairs where f_date = '{}' and stock1 in({},{}) and stock2 in({},{});".format(choose_date, s1, s2, s1, s2)
 	fin_cursor.execute(query)
 	result = fin_cursor.fetchall()
 	fin_db.commit()
-	df = pd.DataFrame(list(result))
-	df["avg_price"] = df["avg_price"].apply(lambda x: x/100)
-	df = df.pivot(index='mtimestamp', columns='code', values='avg_price')
+	table = pd.DataFrame(list(result))	
+
+
+
+################## query pair tick ##################
+
+	fin_db.ping(reconnect = True)
+	query1 = "select left(stime, 16) as mtimestamp, price/100 as '{}' from {} where stime >= '{} 9:00' and stime <= '{} 13:30' GROUP BY mtimestamp;".format(s1,"s_"+s1, choose_date, choose_date) 
+	fin_cursor.execute(query1)
+	result1 = fin_cursor.fetchall()
+	fin_db.commit()
+	df = pd.DataFrame(list(result1))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
 	df = df.fillna(method='ffill')
-	day1 = df.fillna(method='backfill')
-	day1 = day1.reset_index()
-	day1.index = np.arange(0,len(day1),1)
+	stock_1 = df.fillna(method='backfill')
+	stock_1 = stock_1.reset_index()
 
-
-	# print(df)
-
-	# query = "select distinct f_date from pairs where f_date = '"+ choose_date +"';"
-	# fin_cursor.execute(query)
-	# result = list(fin_cursor.fetchall())
-	# fin_db.commit()
-
-
-	query = "select * from pairs where f_date = '"+ choose_date +"';"
-	fin_cursor.execute(query)
-	result = fin_cursor.fetchall()
+	query2 = "select left(stime, 16) as mtimestamp, price/100 as '{}' from {} where stime >= '{} 9:00' and stime <= '{} 13:30' GROUP BY mtimestamp;".format(s2,"s_"+s2, choose_date, choose_date) 
+	fin_cursor.execute(query2)
+	result2 = fin_cursor.fetchall()
 	fin_db.commit()
-	table = pd.DataFrame(list(result))
-	table.index = np.arange(0,len(table),1)
-
-
-
-		
-	#========================================== back test ==============================================
-
-
-
-	query = "select left(stime, 16) as mtimestamp, code , price from s_price_tick where stime >= '"+ choose_date +" 11:29' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"   
-	fin_cursor.execute(query)
-	result = fin_cursor.fetchall()
-	fin_db.commit()
-	df = pd.DataFrame(list(result))
-	df["price"] = df["price"].apply(lambda x: x/100)
-	df = df.pivot(index='mtimestamp', columns='code', values='price')
+	df = pd.DataFrame(list(result2))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
 	df = df.fillna(method='ffill')
-	tick_data = df.fillna(method='backfill')
-	tick_data.index = np.arange(0,len(tick_data),1)
+	stock_2 = df.fillna(method='backfill')
+	stock_2 = stock_2.reset_index(drop=True)
 
-	
+	tick_data = pd.concat([stock_1,stock_2],axis=1)[166:].reset_index()
 
-	query = "select left(stime, 16) as mtimestamp, code , sum(volume * price)/sum(volume) as avg_price from s_price_tick where stime > '"+ choose_date +" 11:30' and stime <= '"+ choose_date +" 13:25' GROUP BY code, mtimestamp;"
-	fin_cursor.execute(query)
-	result = fin_cursor.fetchall()
+
+################## query pair min average##################
+
+
+	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as '{}' from {} where stime >= '{} 09:00' and stime <= '{} 13:30' GROUP BY mtimestamp;".format(s1,"s_"+s1, choose_date, choose_date) 
+	fin_cursor.execute(query1)
+	result1 = fin_cursor.fetchall()
 	fin_db.commit()
-	df = pd.DataFrame(list(result))
-	df["avg_price"] = df["avg_price"].apply(lambda x: x/100)
-	df = df.pivot(index='mtimestamp', columns='code', values='avg_price')
+	df = pd.DataFrame(list(result1))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
 	df = df.fillna(method='ffill')
-	min_data = df.fillna(method='backfill')
-	min_data.index = np.arange(0,len(min_data),1)
-	#min_data["avg_price"] = min_data["avg_price"].apply(lambda x: x/100)
-	# print(min_data)
+	stock_1 = df.fillna(method='backfill')
+	stock_1 = stock_1.reset_index(drop=True)
 
-	formate_time = 150
+	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as '{}' from {} where stime >= '{} 09:00' and stime <= '{} 13:30' GROUP BY mtimestamp;".format(s2,"s_"+s2, choose_date, choose_date) 
+	fin_cursor.execute(query2)
+	result2 = fin_cursor.fetchall()
+	fin_db.commit()
+	df = pd.DataFrame(list(result2))
+	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+	df = df.set_index('mtimestamp').resample('T')
+	df = df.fillna(method='ffill')
+	stock_2 = df.fillna(method='backfill')
+	stock_2 = stock_2.reset_index(drop=True)
 
-	# capital = 3000           # 每組配對資金300萬
-	# maxi = 5                 # 股票最大持有張數
-	# open_time = 1.5                 # 開倉門檻倍數
-	# stop_loss_time = 10                  # 停損門檻倍數
-	# tax_cost = 0
-	l_table = len(table.index)
-	for i in range(l_table):
-		
-		y = table.iloc[i,:]
-		for j in pair_list:
-			if (j[0] == y.stock1 and j[1] == y.stock2 ) or (j[0] == y.stock2 and j[1] == y.stock1 ):
-				
-				result = pairs( i , formate_time , y , min_data , tick_data , open_time , stop_loss_time , day1 , maxi , tax_cost , capital )
-				return result
+	min_data = pd.concat([stock_1,stock_2],axis=1)
 
+	result = pairs( 
+		pos = 0,
+		formate_time = 166,  
+		table = table , 
+		min_data = min_data , 
+		tick_data = tick_data ,
+		maxi = 5 ,
+		tax_cost = 0.000, 
+		cost_gate = 0.000 , 
+		capital = 300000000 
+	)
+	return result
 
-
-
-
-if __name__ == '__main__':
-	choose_date = sys.argv[1]
-	capital = 3000           # 每組配對資金300萬
-	maxi = 5                 # 股票最大持有張數
-	open_time = 1.5                 # 開倉門檻倍數
-	stop_loss_time = 10                  # 停損門檻倍數
-	tax_cost = 0
-	pair_list = ["1326","4909"]
-	#get_pairs_spread(choose_date, "s_2330", "s_2313")
-	trade_certain_pairs(choose_date, capital, maxi, open_time, stop_loss_time, tax_cost)
-
+def structure_break_pred(choose_date,s1,s2):
+	choose_date = choose_date.replace("-","")
+	print(choose_date, s1, s2)
+	func_para = '{"date":'+choose_date+',"stock1":'+s1+',"stock2":'+s2+'}' 
+	res = requests.post('http://mpcdl.cs.nctu.edu.tw:5019/predict/api/', json=func_para)
+	print(res)
+	return res.json()

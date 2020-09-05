@@ -95,53 +95,6 @@
 								</tr>
 						</tbody>
 					  </table>	
-						<!-- <table class="ui orange very basic collapsing celled table" style="display: inline-block;">
-						  <thead>
-							<tr><th colspan="2">配對資訊</th>
-						  </tr></thead>
-						  <tbody id="pairs_info">
-	
-						  </tbody>
-						</table>
-	
-						<table class="ui green very basic collapsing celled table" style="display: inline-block; margin-left: 4vw;">
-						  <thead>
-							<tr><th >交易資訊</th>
-								<th><div id="retrade" class="ui yellow button" style="color:black;">重新回測</div></th>
-						  </tr>
-						</thead>
-						  <tbody id="trade_info">
-								  <tr>	
-									  <td> 開倉門檻</td>
-									  <td> <div class="ui mini input"><input id="open" type="text" name="open" value="1.5" style="width: 4vw"></div> 倍標準差</td>
-								  </tr>
-								  <tr>	
-									  <td>停損門檻</td>
-									  <td><div class="ui mini input"><input id="stop" type="text" name="open" value="2.5" style="width: 4vw"></div> 倍標準差</td>
-								  </tr>
-								  <tr>	
-									  <td>股票最大持有張數</td>
-									  <td><div class="ui mini input"><input id="max_keep" type="text" name="open" value="5" style="width: 4vw"></div> 張</td>
-								  </tr>
-								  <tr>	
-									  <td>交易成本</td>
-									  <td><div class="ui mini input"><input id="tax_cost" type="text" name="open" value="0.0" style="width: 4vw"></div> %</td>
-								  </tr>
-								  <tr>	
-									  <td>配對投入資金</td>
-									  <td><div class="ui mini input"><input id="invest" type="text" name="open" value="300" style="width: 4vw"></div> 萬</td>
-								  </tr>
-						  </tbody>
-						</table> -->
-	
-						<!-- <table class="ui green very basic collapsing celled table" style="display: inline-block; margin-left: 4vw;">
-						  <thead>
-							<tr><th colspan="2">交易結果</th>
-						  </tr></thead>
-						  <tbody id="trade_result_table">
-								  <tr><td class="center aligned" colspan="2"> 計算中 .... </td></tr>
-						  </tbody>
-						</table> -->
 					<table class="ui teal celled striped table" style="max-height: 20vh; overflow-y: scroll;">
 					  <thead>
 						<tr>
@@ -159,8 +112,6 @@
 					  <thead>
 						<tr>
 							<th>交易過程</th>
-							<!-- <th>細節</th>
-							<th>損益</th> -->
 					  </tr></thead>
 	
 					  <tbody>
@@ -230,15 +181,11 @@
 					risk = ['#94fa7a;', '#fa7575' , '#ffffff']
 					buy = ["Short", "Long", "Neutral"]
 					text = ""
-					// if (data.length==0){
-					// 	text = "<h3 style='padding:5vh;'>無適合交易的股票配對 。</h3>"
-					// }
 					
 					document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
 					for (var i = 0 ; i < data.length; i++){
 						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["stock1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["stock2"] + "</td>";
 	
-						//console.log(data[i]["w1"])
 						if(data[i]["w1"]<0){
 							text += "<td class=' center aligned ' style='background:#94fa7a;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
 						}
@@ -254,10 +201,8 @@
 						
 
 						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>"
-						// "<td class=' center aligned' style='background:" + risk[pos1] + ";'>" + buy[pos1]+ "</td><td class=' center aligned' style='background:" + risk[pos2]+ ";' >" + buy[pos2] +
 						text += "</td><td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
-	
-						// text += "<tr class='styled accordion' style='display:none'> " + "<td class=' center aligned ' >" + '公司' + "</td>" + "<td class=' center aligned ' >" + '新聞標題' + "</td>" + "<td class=' center aligned ' >" + '時間' + "</td>" + "<td class=' center aligned ' >" + '新聞內容' + "</td>" + "<td class=' center aligned ' >" + '漲跌預測' + "</td>";
+
 					}
 					document.getElementById("pair").innerHTML = text;
 					start_trade();
@@ -722,12 +667,7 @@
 							trade_history_table += "<tr class='error'>"
 						}
 						else{
-							// if (i%2){
-							// 	trade_history_table += "<tr style='border: 2px solid black;'>";
-							// }
-							// else{
 							trade_history_table += "<tr>";
-							// }
 						}
 						trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>";
 						if(tmp[2] < 0){
@@ -749,75 +689,19 @@
 						trade_history_table +=  "</tbody>  <tfoot><tr><th class=' center aligned '>" + data["trade_history"][trade_history_length][0] + "</th><th class=' center aligned '>" + data["trade_history"][trade_history_length][1] + "</th><th></th><th></th><th></th></tr></tfoot>"	            	
 					}
 					else{
-						trade_history_table +=  "</tbody>  <tfoot><tr><th></th><th></th><th></th><th class=' center aligned '>" + data["trade_history"][trade_history_length][0] + "</th><th class=' center aligned '>" + data["trade_history"][trade_history_length][1].toFixed(4) + "</th></tr></tfoot>"	            	
+						trade_history_table += "</tbody><tfoot>";
+						trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>開倉次數</th><th class=' center aligned '>" + data["local_open_num"] + "</th></tr>";
+						trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>" + data["trade_history"][trade_history_length][0] + "</th><th class=' center aligned '>" + data["trade_history"][trade_history_length][1].toFixed(4) + "</th></tr>";
+						trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>報酬率</th><th class=' center aligned '>" + String(parseFloat(data["local_rt"]*100).toFixed(4)) + " %</th></tr>";
+						trade_history_table += "</tfoot>"           	
 					}
 					
-
-					trade_result_table =  "<tr>"+ "<td class=' center aligned '>" + "開倉次數" + "</td>" + "<td class=' center aligned '>" + data["local_open_num"] + "</td>" + "</tr>" + "<tr>"+ "<td class=' center aligned '>" + "報酬率" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["local_rt"]*100).toFixed(4)) + " %</td>" + "</tr>";
-					//trade_result_table += + "<tr>"+ "<td class=' center aligned '>" + "報酬" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["profit"])) + " </td>" + "</tr>";
-					//console.log(trade_result_table);
 					document.getElementById("trade_history").innerHTML = trade_history_table
-					// document.getElementById("trade_result_table").innerHTML = trade_result_table;  
-					// re_trade(day, s1, s2);
+
 				}
 			
 		 });	
-	}
-	
-	// function re_trade(day, s1, s2){
-	// 	$("#retrade").click(function() {
-	// 		var open_time = $("#open").val();
-	// 		var stop_loss_time = $("#stop").val();
-	// 		var maxi = $("#max_keep").val();
-	// 		var tax_cost = $("#tax_cost").val();
-	// 		var capital = $("#invest").val();
-	// 		document.getElementById("trade_history").innerHTML = '<tr><td class="center aligned" colspan="2"> 計算中 .... </td></tr>';
-	// 		document.getElementById("trade_result_table").innerHTML = '<tr>	<td class="center aligned" colspan="2"> 計算中 .... </td></tr>';  
-	// 	$.ajax({
-	// 			type:"GET",
-	// 			dataType: 'json',
-	// 			url: "/stock/trade_backtest_tune",
-	// 			data : { 's1' : s1, 's2' : s2, "trade_date" : day, "open_time" : open_time, "stop_loss_time" : stop_loss_time, "maxi" : maxi, "tax_cost" : tax_cost, "capital" : capital},
-	// 			success: function(response) {
-	// 				data = JSON.parse(response);
-	// 				// console.log(data);
-	// 				trade_history_table = "";
-	// 				// console.log(data["trade_history"].length);
-	// 				if (data["trade_history"].length == 0){
-	// 					trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無任何交易" + "</td>" + "</tr>" ;
-	// 				}
-	// 				else{
-	// 					for (i = 0; i < data["trade_history"].length; i++) {
-	// 						tmp = data["trade_history"][i].split("/");
-	// 						if (String(tmp[1]).includes("，上開倉") || String(tmp[1]).includes("，下開倉")){
-	// 							trade_history_table += "<tr class='positive'>"
-	// 						}
-	// 						else if(String(tmp[1]).includes("結構性斷裂") || String(tmp[1]).includes("強制平倉")){
-	// 							trade_history_table += "<tr class='error'>"
-	// 						}
-	// 						else{
-	// 							trade_history_table += "<tr>";
-	// 						}
-	// 						trade_history_table += "<td class=' center aligned '>" + tmp[0] + "</td>" + "<td class=' center aligned '>" + tmp[1] + "</td>" + "</tr>"
-	// 					}	            	
-	// 				}
-	
-	// 				document.getElementById("trade_history").innerHTML = trade_history_table;
-	// 				trade_result_table =  "<tr>"+ "<td class=' center aligned '>" + "開倉次數" + "</td>" + "<td class=' center aligned '>" + data["local_open_num"] + "</td>" + "</tr>" + "<tr>"+ "<td class=' center aligned '>" + "報酬率" + "</td>" + "<td class=' center aligned '>" + String(parseFloat(data["local_rt"]).toFixed(6)*100) + " %</td>" + "</tr>";
-	// 				//console.log(trade_result_table);
-	// 				document.getElementById("trade_result_table").innerHTML = trade_result_table;  
-	// 				// re_trade(day, s1, s2);
-	// 			}
-	// 	 });				
-	// 		// console.log(open,stop,max_keep,invest);
-	// 	});
-	// }
-	
-	
-	
-	 
-	
-	
+	}	
 	</script>
 	</body>	
 	

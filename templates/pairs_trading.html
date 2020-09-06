@@ -1,9 +1,9 @@
 <head>
 
 	<script src="https://code.highcharts.com/stock/highstock.js"></script>
-	<script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
-	<script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
-	<script type="application/javascript" src="http://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+	<!-- <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
+	<script src="https://code.highcharts.com/stock/modules/export-data.js"></script> -->
+	<!-- <script type="application/javascript" src="http://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script> -->
 	
 	</head>
 	<style>
@@ -622,28 +622,44 @@
 						for (i = 0; i < data["s1_news"].length; i++) {
 							tmp = data["s1_news"][i];
 							console.log(tmp)
-							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
+							// trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
+							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s1_news_" + String(i) + "><i class='arrow down icon' style='color:green'></i></td>"+"</tr>"; 
 						}
 						for (i = 0; i < data["s2_news"].length; i++) {
 							tmp = data["s2_news"][i];
-							trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
-	
+							// trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
+							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s2_news_" + String(i) + "><i class='arrow up icon' style='color:red'></i></td>"+"</tr>"; 
 	
 						}
 					}
 					document.getElementById("trade_news").innerHTML = trade_news_table;
 	
 					for (i = 0 ; i< data["s2_news"].length; i++){
-						pos = Math.floor((Math.random() * 100) + 1)
-						$('#s2_news_'+String(i)).progress({
-						  percent: pos
-						});
+						$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+						// pos = Math.floor((Math.random() * 100) + 1);
+						// console.log(pos);
+						// if(pos%2){
+						// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+						// }
+						// else{
+						// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+						// }
+						// $('#s2_news_'+String(i)).progress({
+						//   percent: pos
+						// });
 					}
 					for (i = 0 ; i< data["s1_news"].length; i++){
-						pos = Math.floor((Math.random() * 100) + 1)
-						$('#s1_news_'+String(i)).progress({
-						  percent: pos
-						});
+						$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+						// pos = Math.floor((Math.random() * 100) + 1);
+						// if(pos%2){
+						// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+						// }
+						// else{
+						// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+						// }
+						// $('#s1_news_'+String(i)).progress({
+						//   percent: pos
+						// });
 					}
 	
 	

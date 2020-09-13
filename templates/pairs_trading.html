@@ -19,7 +19,7 @@
 	
 	<body>
 	{% include "nav_bar.html" %}
-		<div class="ui grid" style="margin: 3vh 5vw 5vw; min-height: 75vh;">
+		<div class="ui grid" style="margin: 3vh 5vw 5vw; min-height: 78vh;">
 			<div class="six column centered row" style="height: 10vh;">
 				<div class="ui steps">
 				  <div class="active step" id = "calendar">
@@ -52,11 +52,15 @@
 					<div class="ui input left icon">
 					  <i class="calendar icon"></i>
 					  <input type="text" id="datepicker" autocomplete="off">
+					  <button class="ui teal icon button" id="submit1">
+						  &nbsp Go &nbsp 
+						<!-- <i class="arrow right icon"></i> -->
+					  </button>
 					</div>
 				  </div>
 			</div>
 			<div class="six column centered row" id = "date_pick" style="height: 45vh; margin-top: 0vh;">
-				<button id="submit1" class="positive ui button">下一步</button>
+				<!-- <button id="submit1" class="positive ui button">下一步</button> -->
 			</div>
 			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 65vh; overflow-y: scroll;">
 				  <h3>配對</h3>
@@ -502,7 +506,7 @@
 						color: '#875F9A'
 						}, 
 						{
-						name: "Expected mean",
+						name: "Convergence Mean",
 						data: processed_json3_1,
 						color: '#02d41b'
 						}, 
@@ -595,7 +599,7 @@
 			$( "#go_trade" ).show();
 			$( "#pairs_found" ).removeClass( "active" );
 			$( "#trade_result" ).addClass( "active" );
-			pairs_info = "<tr><td class=' center aligned '> Expected mean" + "</td>" + 
+			pairs_info = "<tr><td class=' center aligned '> Convergence &nbsp Mean" + "</td>" + 
 			"<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + 
 			"<td class=' center aligned '> 開倉門檻 " + "</td>" +
 			"<td class=' center aligned '>" + data.thresold[0].toFixed(4) + "</td></tr>" +

@@ -128,7 +128,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                     trade_capital += 0.9*abs(cpA)+0.9*abs(cpB)
                     # down_open = table.mu[pos] - table.stdev[pos] * close_time
                 trade += 1
-                trade_process.append([tick_data.mtimestamp[i],"碰到上開倉門檻 ,上開倉<br>",w1, w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到上開倉門檻 ,上開倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
 
 
             elif (spread[i] - down_open) * (spread[i + 1] - down_open) < 0 and spread[i + 1] > (close - stop_loss):  # 碰到下開倉門檻且大於下停損門檻
@@ -151,7 +151,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                     trade_capital += 0.9*abs(cpA)+0.9*abs(cpB)
                 # up_open = table.mu[pos] + table.stdev[pos] * close_time
                 trade += 1
-                trade_process.append([tick_data.mtimestamp[i],"碰到下開倉門檻 ,下開倉<br>", -w1, -w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到下開倉門檻 ,下開倉<br>", w1, w2, stock1_payoff+stock2_payoff])
             else:
                 position = 0
                 stock1_payoff = 0
@@ -165,7 +165,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock2_payoff = -w2 * slip(tick_data[s2][i + 1], -tw2)
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[0]+=1
-                trade_process.append([tick_data.mtimestamp[i],"碰到均值，平倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到均值，平倉<br>",w1, w2, stock1_payoff+stock2_payoff])
                 # down_open = table.mu[pos] - table.stdev[pos] * open_time
                 # 每次交易報酬做累加(最後除以交易次數做平均)
             elif spread[i + 1] > (close + stop_loss):  # 空倉碰到上停損門檻即平倉停損
@@ -176,7 +176,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock2_payoff = -w2 * slip(tick_data[s2][i + 1], -tw2)
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[1]+=1
-                trade_process.append([tick_data.mtimestamp[i],"碰到上停損門檻，強制平倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到上停損門檻，強制平倉<br>",w1, w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
 
             elif i == (len(spread) - 7):  # 回測結束，強制平倉
@@ -187,7 +187,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock2_payoff = -w2 * slip(tick_data[s2][len(tick_data) - 1], -tw2)
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[2]+=1
-                trade_process.append([tick_data.mtimestamp[i],"回測結束，強制平倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"回測結束，強制平倉<br>",w1, w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
             else:
                 position = -1
@@ -202,7 +202,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock2_payoff = w2 * slip(tick_data[s2][i + 1], tw2)
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[0]+=1
-                trade_process.append([tick_data.mtimestamp[i],"碰到均值，平倉<br>",w1, w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到均值，平倉<br>",-w1, -w2, stock1_payoff+stock2_payoff])
                 # up_open = table.mu[pos] + table.stdev[pos] * open_time
                 # 每次交易報酬做累加(最後除以交易次數做平均)
             elif spread[i + 1] < (close - stop_loss):
@@ -214,7 +214,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[1]+=1
 
-                trade_process.append([tick_data.mtimestamp[i],"碰到下停損門檻，強制平倉<br>", w1, w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"碰到下停損門檻，強制平倉<br>", -w1, -w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
 
             elif i == (len(spread) - 7):  # 回測結束，強制平倉
@@ -226,7 +226,7 @@ def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_ga
                 stock1_payoff, stock2_payoff = tax(stock1_payoff, stock2_payoff, position, tax_cost)  # 計算交易成本
                 trading[2]+=1
 
-                trade_process.append([tick_data.mtimestamp[i],"回測結束，強制平倉<br>", w1, w2, stock1_payoff+stock2_payoff])
+                trade_process.append([tick_data.mtimestamp[i],"回測結束，強制平倉<br>", -w1, -w2, stock1_payoff+stock2_payoff])
                 # 每次交易報酬做累加(最後除以交易次數做平均)
             else:
                 position = 1

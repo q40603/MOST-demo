@@ -270,15 +270,15 @@ def trade_pair(choose_date, s1, s2):
 	min_data = pd.concat([stock_1,stock_2],axis=1)
 
 	result = pairs( 
-		pos = 0,
-		formate_time = 166,  
-		table = table , 
-		min_data = min_data , 
-		tick_data = tick_data ,
-		maxi = 5 ,
-		tax_cost = 0.000, 
-		cost_gate = 0.000 , 
-		capital = 300000000 
+        pos = 0,
+        formate_time = 166,  
+        table = table , 
+        min_data = min_data , 
+        tick_data = tick_data ,
+        maxi = 5 ,
+        tax_cost = 0.0015, 
+        cost_gate = 0.000 , 
+        capital = 300000000 
 	)
 	return result
 

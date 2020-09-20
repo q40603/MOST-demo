@@ -59,7 +59,15 @@
 					</div>
 				  </div>
 			</div>
-			<div class="six column centered row" id = "date_pick" style="height: 45vh; margin-top: 0vh;">
+			<div class="centered row" id = "summary_chart" style="height: 45vh; margin-top: 13vh;">
+				<div class="one wide column"></div>
+				<div class="seven wide column">
+					<div id="container0_1"></div>
+				</div>
+				<div class="seven wide column">
+					<div id="container0_2"></div>
+				</div>
+				<div class="one wide column"></div>
 				<!-- <button id="submit1" class="positive ui button">下一步</button> -->
 			</div>
 			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 65vh; overflow-y: scroll;">
@@ -166,6 +174,108 @@
 			}
 		  }
 		});
+
+		Highcharts.chart('container0_1', {
+			chart: {
+				type: 'column'
+			},
+			title: {
+				text: 'Pairs trade daily summary'
+			},
+			xAxis: {
+				categories: ['9/11', '9/14', '9/16', '9/17', '9/18']
+			},
+			yAxis: {
+				min: 0,
+				title: {
+					text: 'Total Pair Found'
+				},
+				stackLabels: {
+					enabled: true,
+					style: {
+						fontWeight: 'bold',
+						color: ( // theme
+							Highcharts.defaultOptions.title.style &&
+							Highcharts.defaultOptions.title.style.color
+						) || 'gray'
+					}
+				}
+			},
+			colors: ["#f79494","#bdbdbd","#a2f794"],
+			legend: {
+				align: 'right',
+				x: -30,
+				verticalAlign: 'top',
+				y: 25,
+				floating: true,
+				backgroundColor:
+					Highcharts.defaultOptions.legend.backgroundColor || 'white',
+				borderColor: '#CCC',
+				borderWidth: 1,
+				shadow: false
+			},
+			tooltip: {
+				headerFormat: '<b>{point.x}</b><br/>',
+				pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+			},
+			plotOptions: {
+				column: {
+					stacking: 'normal',
+					dataLabels: {
+						enabled: true
+					}
+				}
+			},
+			series: [{
+				name: 'win',
+				data: [147, 106, 95, 117, 178]
+			}, {
+				name: 'zero',
+				data: [104, 125, 75, 95, 104]
+			}, {
+				name: 'loss',
+				data: [166, 242, 178, 162, 101]
+			}]
+		});
+
+
+		Highcharts.chart('container0_2', {
+			chart: {
+				type: 'column'
+			},
+			title: {
+				text: 'Pairs trade daily profit'
+			},
+
+			yAxis: {
+				title: {
+					text: 'Profit'
+				}
+			},
+
+			xAxis: {
+				categories: ['9/11', '9/14', '9/16', '9/17', '9/18']
+			},
+
+			legend: {
+				layout: 'vertical',
+				align: 'right',
+				x: -30,
+				verticalAlign: 'top',
+				y: 25,
+				floating: true,
+
+			},
+
+
+			series: [{
+				name: 'Profit',
+				data: [10.315, -379.898, -253.516, -402.924, -661.415]
+			}],
+
+
+		});		
+
 	});
 	$('#submit1').click(function(){
 		var day = $('#datepicker').val();
@@ -179,7 +289,7 @@
 					data = JSON.parse(response);
 					pairs_info = data;
 					$( "#chosse_date" ).hide(500);
-					$( "#date_pick" ).hide(500);
+					$( "#summary_chart" ).hide(500);
 					$( "#pairs_table" ).show( 500 );
 					$( "#calendar" ).removeClass( "active" );
 					$( "#pairs_found" ).addClass( "active" );
@@ -614,7 +724,7 @@
 			"<tr><td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + 
 			"<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" +
 			"<td class=' center aligned '> 交易成本" + "</td>" +
-			"<td class=' center aligned '>0.000%</td></tr>";
+			"<td class=' center aligned '>0.0015%</td></tr>";
 			document.getElementById("pairs_info").innerHTML = pairs_info;
 	
 				trade_news_table = "";

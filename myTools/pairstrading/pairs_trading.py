@@ -1,23 +1,13 @@
 import pymysql
-import os
 import json
-import csv
-import time
-import sys
 import requests
-from .formation_period import formation_period_single
 from .trading_period import pairs
 from datetime import datetime
-from . import accelerate_formation
-from . import accelerate_trading
-from . import ADF
 import pandas as pd
 import numpy as np
 from pymongo import MongoClient
 from .vecm import para_vecm
 from .Matrix_function import order_select
-
-
 
 db_host = '140.113.24.2'
 db_name = 'fintech'
@@ -32,17 +22,14 @@ fin_db = pymysql.connect(
 
 )
 fin_cursor = fin_db.cursor(pymysql.cursors.DictCursor)
-
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb://68.183.177.193:27017/")
 news_db = client["cfda"]
-
-
 
 
 '''
 query the stock news frmo mongodb that are in range 9:00 ~ 13:30
 '''
-def get_stock_news(choose_date,cusip):
+def get_stock_news(choose_date, cusip):
 	start = choose_date + " 09:00"
 	end = choose_date + " 13:30"
 	tmp = news_db["c_{}".format(cusip)].find(
@@ -62,14 +49,14 @@ def get_stock_news(choose_date,cusip):
 '''
 query company chinese name
 '''
-def get_s_name(s1,s2):
+def get_s_name(s1, s2):
 	query = "select * from stock_name where s_id = {} or s_id = {}".format(s1, s2)
 	fin_cursor.execute(query)
 	result = fin_cursor.fetchall()
 	return(result)
 
 
-def spread_mean(stock1,stock2,table):
+def spread_mean(stock1, stock2, table):
     model = ""
 
     if table["model_type"] == 'model1':
@@ -278,7 +265,7 @@ def trade_pair(choose_date, s1, s2):
 	)
 	return result
 
-def structure_break_pred(choose_date,s1,s2):
+def structure_break_pred(choose_date, s1, s2):
 	choose_date = choose_date.replace("-","")
 	print(choose_date, s1, s2)
 	func_para = '{"date":'+choose_date+',"stock1":'+s1+',"stock2":'+s2+'}' 

@@ -5,14 +5,12 @@ import csv
 import time
 import sys
 import requests
-from bs4 import BeautifulSoup
-from .formation_period import formation_period_single #, formation_period_pair
+from .formation_period import formation_period_single
 from .trading_period import pairs
 from datetime import datetime
 from . import accelerate_formation
 from . import accelerate_trading
 from . import ADF
-#import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from pymongo import MongoClient
@@ -41,9 +39,10 @@ news_db = client["cfda"]
 
 
 
-
+'''
+query the stock news frmo mongodb that are in range 9:00 ~ 13:30
+'''
 def get_stock_news(choose_date,cusip):
-	date = choose_date
 	start = choose_date + " 09:00"
 	end = choose_date + " 13:30"
 	tmp = news_db["c_{}".format(cusip)].find(
@@ -57,11 +56,12 @@ def get_stock_news(choose_date,cusip):
 
 	final = []
 	for i in tmp:
-		#i["time"] = i["time"].strftime("%H:%M")
 		final.append(i)
 	return final 
 
-
+'''
+query company chinese name
+'''
 def get_s_name(s1,s2):
 	query = "select * from stock_name where s_id = {} or s_id = {}".format(s1, s2)
 	fin_cursor.execute(query)
@@ -71,26 +71,22 @@ def get_s_name(s1,s2):
 
 def spread_mean(stock1,stock2,table):
     model = ""
-    #print(stock1, stock2)
+
     if table["model_type"] == 'model1':
         model = 'H2'
     elif table["model_type"] == 'model2':
         model = 'H1*'
     elif table["model_type"] == 'model3':
         model = 'H1'
-    #print(model)
-    # stock1 = stock1[15:]
-    # stock2 = stock2[15:]
+
     stock1 = stock1[16:166]
     stock2 = stock2[16:166]
     b1 = table["w1"]
     b2 = table["w2"]
     y = np.vstack( [stock1, stock2] ).T
-    logy = np.log(y)#y.copy()
-    lyc = logy.copy()
+    logy = np.log(y)
     p = order_select(logy,5)
-    #print(logy)
-    #print('p:',p)
+
     _,_,para = para_vecm(logy,model,p)
     logy = np.mat(logy)
     y_1 = np.mat(logy[p:])

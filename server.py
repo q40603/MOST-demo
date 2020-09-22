@@ -1,24 +1,48 @@
+'''
+json : pack result to json,
+flask : flask server and related modeul,
+_pickle : load 25 actions from pickle
+myTools : pairs trade related function
+'''
 import json
 from flask import Flask, render_template, jsonify, request
 import _pickle as pickle
-from myTools.pairstrading.pairs_trading import get_all_pairs,\
-get_pairs_spread, trade_pair, get_stock_news, get_s_name, structure_break_pred
+from myTools.pairstrading.pairs_trading import \
+    get_all_pairs, get_pairs_spread, \
+    trade_pair, get_stock_news, \
+    get_s_name, structure_break_pred
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
+    '''
+    return static html file : first page
+    '''
     return render_template("pairs_trading.html")
 
 
 @app.route("/stock/find_past_pairs", methods=['GET'])
 def find_past_pairs():
+    '''
+    return pairs found in given date
+    '''
     trade_date = request.values.get('trade_date')
     data = get_all_pairs(trade_date)
     return jsonify(data)
 
 @app.route("/stock/get_pairs_price", methods=['GET'])
 def get_pairs_price():
+    '''
+    return {
+        s1's and s2's stock price spread,
+        s1's and s2's stock info : stock name,
+        s1's and s2's news,
+        conintegration spread,
+        action chosed from ResNet (Kuo),
+        Structure break prediction from NCTU CS
+    }
+    '''
     s_1 = request.values.get('s1')
     s_2 = request.values.get('s2')
     trade_date = request.values.get('trade_date')
@@ -45,6 +69,9 @@ def get_pairs_price():
 
 @app.route("/stock/trade_backtest", methods=['GET'])
 def trade_backtest():
+    '''
+    return backtest result
+    '''
     s_1 = request.values.get('s1')
     s_2 = request.values.get('s2')
     choose_date = request.values.get('trade_date')

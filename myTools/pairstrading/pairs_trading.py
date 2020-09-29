@@ -22,7 +22,7 @@ fin_db = pymysql.connect(
 
 )
 fin_cursor = fin_db.cursor(pymysql.cursors.DictCursor)
-client = MongoClient("mongodb://68.183.177.193:27017/")
+client = MongoClient("mongodb://127.0.0.1:27017/")
 news_db = client["cfda"]
 
 

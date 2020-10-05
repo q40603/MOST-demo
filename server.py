@@ -4,7 +4,7 @@ flask : flask server and related modeul,
 _pickle : load 25 actions from pickle
 myTools : pairs trade related function
 '''
-import json
+import json, sys
 from flask import Flask, render_template, jsonify, request
 import _pickle as pickle
 from myTools.pairstrading.pairs_trading import \
@@ -80,4 +80,4 @@ def trade_backtest():
     return jsonify(data)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host=sys.argv[1], port=sys.argv[2])

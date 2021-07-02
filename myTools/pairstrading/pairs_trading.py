@@ -5,14 +5,22 @@ from .trading_period import pairs
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import math
 from pymongo import MongoClient
 from .vecm import para_vecm
 from .Matrix_function import order_select
 
-db_host = '140.113.24.2'
-db_name = 'fintech'
-db_user = 'fintech'
-db_passwd = 'financefintech'
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+
+token = "OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ=="
+org = "PairTrade"
+bucket = "stock"
+
+db_host = '127.0.0.1'
+db_name = 'PairsTrade'
+db_user = 'kctsai'
+db_passwd = 'financeai'
 
 fin_db = pymysql.connect(
 	host = db_host,
@@ -22,8 +30,8 @@ fin_db = pymysql.connect(
 
 )
 fin_cursor = fin_db.cursor(pymysql.cursors.DictCursor)
-client = MongoClient("mongodb://127.0.0.1:27017/")
-news_db = client["cfda"]
+# client = MongoClient("mongodb://127.0.0.1:27017/")
+# news_db = client["cfda"]
 
 
 '''
@@ -103,82 +111,174 @@ def spread_mean(stock1, stock2, table):
     spread_m = np.array(b.T*y_1.T).flatten()
     return spread_m
 
-def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
+
+def get_pairs_spread(pair_info):
+
+	choose_date = pair_info["time"].replace("-","")
+	s1 = pair_info["S1"]
+	s2 = pair_info["S2"]
+	w1 = pair_info["w1"]
+	w2 = pair_info["w2"]
+	client = InfluxDBClient(url="http://paris-trading.lab.nycu.edu.tw:8086", token=token)
+	start = datetime.strptime(f'{choose_date} 09:00', "%Y%m%d %H:%M").strftime('%Y-%m-%dT%H:%M:%SZ')
+	end = datetime.strptime(f'{choose_date} 13:31', "%Y%m%d %H:%M").strftime('%Y-%m-%dT%H:%M:%SZ')
+	query = f'\
+	import "interpolate"\
+	from(bucket: "stock")\
+	|> range(start: {start}, stop: {end})\
+	|> filter(fn: (r) => r["_measurement"] == "{s1}")\
+	|> filter(fn: (r) => r["_field"] == "price" or r["_field"] == "vol")\
+	|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+	|> window(every:1m)\
+	|> reduce(fn: (r, accumulator) => ({{\
+		count: accumulator.count + float(v:r.vol),\
+		total: accumulator.total + (float(v: r.vol) * r.price),\
+	}}),\
+		identity: {{count: 0.0, total: 0.0}}\
+	)\
+	|> map(fn: (r) => ({{ r with _value: float(v: r.total) / r.count }}))\
+	|> keep(columns: ["_start", "_value"])\
+	|> duplicate(column:"_start", as:"_time")\
+	|> window(every:inf)\
+	|> interpolate.linear(every: 1m)\
+	'
+	# print(query)
+	s1_result = client.query_api().query(org=org, query=query)
+	s1_data = []
+	for table in s1_result:
+		for record in table.records:
+			s1_data.append((record.get_time(),record.get_value()))
+
+	query = f'\
+	import "interpolate"\
+	from(bucket: "stock")\
+	|> range(start: {start}, stop: {end})\
+	|> filter(fn: (r) => r["_measurement"] == "{s2}")\
+	|> filter(fn: (r) => r["_field"] == "price" or r["_field"] == "vol")\
+	|> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\
+	|> window(every:1m)\
+	|> reduce(fn: (r, accumulator) => ({{\
+		count: accumulator.count + float(v:r.vol),\
+		total: accumulator.total + (float(v: r.vol) * r.price),\
+	}}),\
+		identity: {{count: 0.0, total: 0.0}}\
+	)\
+	|> map(fn: (r) => ({{ r with _value: float(v: r.total) / r.count }}))\
+	|> keep(columns: ["_start", "_value"])\
+	|> duplicate(column:"_start", as:"_time")\
+	|> window(every:inf)\
+	|> interpolate.linear(every: 1m)\
+	'	
+	s2_result = client.query_api().query(org=org, query=query)
+	s2_data = []
+	for table in s2_result:
+		for record in table.records:
+			s2_data.append((record.get_time(),record.get_value()))
+
+	s1_data = s1_data[:265]
+	s2_data = s2_data[:265]
+
 	fin_db.ping(reconnect = True)
-	query1 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
-	fin_cursor.execute(query1)
-	result1 = fin_cursor.fetchall()
-	fin_db.commit()
-	df = pd.DataFrame(list(result1))
-	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
-	df = df.set_index('mtimestamp').resample('T')
-	df = df.fillna(method='ffill')
-	stock_1 = df.fillna(method='backfill')
-	stock_1 = stock_1.reset_index()
+	query = f"SELECT cid, cname FROM PairsTrade.company where cid={s1} or cid={s2} order by cid;"
+	fin_cursor.execute(query)
+	data = fin_cursor.fetchall()
 
-	query2 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
-	fin_cursor.execute(query2)
-	result2 = fin_cursor.fetchall()
-	fin_db.commit()
-	df = pd.DataFrame(list(result2))
-	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
-	df = df.set_index('mtimestamp').resample('T')
-	df = df.fillna(method='ffill')
-	stock_2 = df.fillna(method='backfill')
-	stock_2 = stock_2.reset_index()
+	spread = []
+	for i in range(265):
+		_spr = w1 * math.log(s1_data[i][1]) + w2 * math.log(s2_data[i][1])
+		spread.append((s1_data[i][0], _spr))
 
+	mean = []
+	mean.append((s1_data[15][0], pair_info["Johansen_intercept"]))
+	mean.append((s1_data[264][0], pair_info["Johansen_intercept"] + pair_info["Johansen_slope"]*265))
 
-	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
-	fin_cursor.execute(query1)
-	result1 = fin_cursor.fetchall()
-	fin_db.commit()
-	df = pd.DataFrame(list(result1))
-	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
-	df = df.set_index('mtimestamp').resample('T')
-	df = df.fillna(method='ffill')
-	stock_1_min = df.fillna(method='backfill')
-	stock_1_min = stock_1_min.reset_index()
-
-	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
-	fin_cursor.execute(query2)
-	result2 = fin_cursor.fetchall()
-	fin_db.commit()
-	df = pd.DataFrame(list(result2))
-	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
-	df = df.set_index('mtimestamp').resample('T')
-	df = df.fillna(method='ffill')
-	stock_2_min = df.fillna(method='backfill')
-	stock_2_min = stock_2_min.reset_index()	
-
-	stock1_std = stock_1_min["avg_price"].std() 
-	stock2_std = stock_2_min["avg_price"].std() 
-
-	spread = pd.DataFrame()
-	spread["mtimestamp"] = stock_2["mtimestamp"]
-	spread["avg_price"] = w1 * np.log(stock_1.avg_price) + w2 * np.log(stock_2.avg_price)
-	spread = spread.fillna(method='ffill')
-	spread = spread.fillna(method='backfill')
-
-
-	table = {
-		"w1" : w1,
-		"w2" : w2,
-		"model_type" : model_type
-	}
-
-	spread_m = spread_mean(stock_1_min["avg_price"], stock_2_min["avg_price"], table )
 	return {
-		"s1" : stock_1.to_dict("records"),
-		"s1_std" : stock1_std,
-		"s2" : stock_2.to_dict("records"),
-		"s2_std" : stock2_std,
-		"spread" : spread.to_dict("records"),
-		"spread_m" : spread_m.tolist()
+		"s1" : s1_data,
+		"s2": s2_data,
+		"s_info" : data,
+		"spread" : spread,
+		"mean" : mean
 	}
+
+
+# def get_pairs_spread(choose_date, s1, s2, w1, w2, model_type):
+# 	fin_db.ping(reconnect = True)
+# 	query1 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+# 	fin_cursor.execute(query1)
+# 	result1 = fin_cursor.fetchall()
+# 	fin_db.commit()
+# 	df = pd.DataFrame(list(result1))
+# 	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+# 	df = df.set_index('mtimestamp').resample('T')
+# 	df = df.fillna(method='ffill')
+# 	stock_1 = df.fillna(method='backfill')
+# 	stock_1 = stock_1.reset_index()
+
+# 	query2 = "select left(stime, 16) as mtimestamp, price/100 as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+# 	fin_cursor.execute(query2)
+# 	result2 = fin_cursor.fetchall()
+# 	fin_db.commit()
+# 	df = pd.DataFrame(list(result2))
+# 	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+# 	df = df.set_index('mtimestamp').resample('T')
+# 	df = df.fillna(method='ffill')
+# 	stock_2 = df.fillna(method='backfill')
+# 	stock_2 = stock_2.reset_index()
+
+
+# 	query1 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s1 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+# 	fin_cursor.execute(query1)
+# 	result1 = fin_cursor.fetchall()
+# 	fin_db.commit()
+# 	df = pd.DataFrame(list(result1))
+# 	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+# 	df = df.set_index('mtimestamp').resample('T')
+# 	df = df.fillna(method='ffill')
+# 	stock_1_min = df.fillna(method='backfill')
+# 	stock_1_min = stock_1_min.reset_index()
+
+
+# 	query2 = "select left(stime, 16) as mtimestamp, sum(volume * price)/(100*sum(volume)) as avg_price from " + s2 +  " where stime >= '"+ choose_date +" 09:00' and stime <= '"+ choose_date +" 13:30' GROUP BY mtimestamp;" 
+# 	fin_cursor.execute(query2)
+# 	result2 = fin_cursor.fetchall()
+# 	fin_db.commit()
+# 	df = pd.DataFrame(list(result2))
+# 	df['mtimestamp'] = pd.to_datetime(df['mtimestamp'])
+# 	df = df.set_index('mtimestamp').resample('T')
+# 	df = df.fillna(method='ffill')
+# 	stock_2_min = df.fillna(method='backfill')
+# 	stock_2_min = stock_2_min.reset_index()
+
+
+# 	stock1_std = stock_1_min["avg_price"].std() 
+# 	stock2_std = stock_2_min["avg_price"].std() 
+
+# 	spread = pd.DataFrame()
+# 	spread["mtimestamp"] = stock_2["mtimestamp"]
+# 	spread["avg_price"] = w1 * np.log(stock_1.avg_price) + w2 * np.log(stock_2.avg_price)
+# 	spread = spread.fillna(method='ffill')
+# 	spread = spread.fillna(method='backfill')
+
+
+# 	table = {
+# 		"w1" : w1,
+# 		"w2" : w2,
+# 		"model_type" : model_type
+# 	}
+
+# 	spread_m = spread_mean(stock_1_min["avg_price"], stock_2_min["avg_price"], table )
+# 	return {
+# 		"s1" : stock_1.to_dict("records"),
+# 		"s1_std" : stock1_std,
+# 		"s2" : stock_2.to_dict("records"),
+# 		"s2_std" : stock2_std,
+# 		"spread" : spread.to_dict("records"),
+# 		"spread_m" : spread_m.tolist()
+# 	}
 
 def get_all_pairs(choose_date):
 	fin_db.ping(reconnect = True)
-	query = "select stock1, stock2, w1, w2, model_type, snr, zcr, mu, stdev, e_mu, e_stdev, action, rt from pairs where f_date = '" + choose_date + "' order by rt desc;"
+	query = "select * from Pairs where time = '" + choose_date + "';"
 	fin_cursor.execute(query)
 	data = fin_cursor.fetchall()
 	return json.dumps(data)

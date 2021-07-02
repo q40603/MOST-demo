@@ -8,9 +8,10 @@ from scipy.stats import skew
 from .cost import tax , slip 
 from .integer import num_weight
 import numpy as np
+import pickle
 
 def pairs(pos, formate_time, table, min_data, tick_data, maxi, tax_cost, cost_gate, capital):
-    with open("../actions.pkl", "rb") as action_pkl:
+    with open("actions.pkl", "rb") as action_pkl:
         actions = pickle.load(action_pkl)
 
     s1 = str(table.stock1[pos])

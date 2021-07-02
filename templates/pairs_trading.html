@@ -83,8 +83,8 @@
 						<th class=' center aligned '>股票 2</th>
 						<th class=' center aligned '>權重 1</th>
 						<th class=' center aligned '>權重 2</th>
-						<th class=' center aligned '>交易策略</th>
-						<th class=' center aligned '>報酬率</th>
+						<!-- <th class=' center aligned '>交易策略</th>
+						<th class=' center aligned '>報酬率</th> -->
 						<th class=' center aligned '>開始交易</th>
 					  </tr>
 
@@ -297,9 +297,9 @@
 					buy = ["Short", "Long", "Neutral"]
 					text = ""
 					
-					document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
+					// document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
 					for (var i = 0 ; i < data.length; i++){
-						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["stock1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["stock2"] + "</td>";
+						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>";
 	
 						if(data[i]["w1"]<0){
 							text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
@@ -315,77 +315,88 @@
 						}
 						
 
-						text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
-						if (data[i]["rt"]<0){
-							text += "<td class=' center aligned ' style='background:#acff80;'>"
-						}
-						else if (data[i]["rt"]>0){
-							text += "<td class=' center aligned ' style='background:#ff8080;'>"
-						}
-						else{
-							text += "<td class=' center aligned '>"
-						}
-						text += String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
-						text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
-
+						// text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
+						// if (data[i]["rt"]<0){
+						// 	text += "<td class=' center aligned ' style='background:#acff80;'>"
+						// }
+						// else if (data[i]["rt"]>0){
+						// 	text += "<td class=' center aligned ' style='background:#ff8080;'>"
+						// }
+						// else{
+						// 	text += "<td class=' center aligned '>"
+						// }
+						// text += "<td class=' center aligned '>";
+						// text += String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
+						// text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
+						text += "<td class=' center aligned' ><button class='center aligned ui button trade' ";
+						text +=	"pairId = " + i;
+						// text +=	"data-s1 = " + data[i]["S1"];
+						// text +=	" data-s2 = " + data[i]["S2"];
+						// text += " data-day = " + day;
+						// text += " data-w1 = " + data[i]["w1"];
+						// text += " data-w2 = " + data[i]["w2"];
+						text += "> trade </button> " + "</td>" + "</tr>";
 					}
 					document.getElementById("pair").innerHTML = text;
-					start_trade();
+					start_trade(data);
 				}
 		 });
 	});
 
-	function start_trade(){
+	function start_trade(pair){
 		$(".trade").click(function() {
-		console.log($(this))
-		var model_type = $(this).attr('data-model_type');
-		var action = $(this).attr('data-action');
-		var w1 = $(this).attr('data-w1');
-		var w2 = $(this).attr('data-w2');
-		var s1 = $(this).attr('data-s1');
-		var s2 = $(this).attr('data-s2');
-		var zcr = $(this).attr('data-zcr');
-		var snr = $(this).attr('data-snr');
-		var mu = $(this).attr('data-mu');
-		var stdev = $(this).attr('data-stdev');
-		var e_mu = $(this).attr('data-e_mu');
-		var e_stdev = $(this).attr('data-e_stdev');
-		var day = $(this).attr('data-day');
+		// var model_type = $(this).attr('data-model_type');
+		// var action = $(this).attr('data-action');
+		var pairId = $(this).attr('pairId');
+		var w1 = pair[parseInt(pairId)]["w1"];
+		var w2 = pair[parseInt(pairId)]["w2"];
+		var s1 = pair[parseInt(pairId)]["S1"];
+		var s2 = pair[parseInt(pairId)]["S2"];
+		var std =  pair[parseInt(pairId)]["std"];
+		// var zcr = $(this).attr('data-zcr');
+		// var snr = $(this).attr('data-snr');
+		// var mu = $(this).attr('data-mu');
+		// var stdev = $(this).attr('data-stdev');
+		// var e_mu = $(this).attr('data-e_mu');
+		// var e_stdev = $(this).attr('data-e_stdev');
+		var day = pair[parseInt(pairId)]["time"];
+		
 		$.ajax({
-				type:"GET",
-				dataType: 'json',
+				type: 'POST',
+    			contentType: 'application/json',
 				url: "/stock/get_pairs_price",
-				data : { 's1' : "s_" + s1, 's2' : "s_" + s2 , "trade_date" : day, 'w1' : w1, 'w2' : w2, "model_type" : model_type, "action" : action },
+				// data : { 's1' : "s_" + s1, 's2' : "s_" + s2 , "trade_date" : day, 'w1' : w1, 'w2' : w2, "model_type" : model_type, "action" : action },
+				data : JSON.stringify(pair[parseInt(pairId)]),//{ '' : s1, 's2' : s2 , "trade_date" : day},
 				success: function(response) {
-					data = JSON.parse(response);
-					console.log(data);
-					$("#open").val(data.thresold[0]);
-					$("#stop").val(data.thresold[1]);
+					data = response;
+					//console.log(data["s_info"]);
+					// $("#open").val(data.thresold[0]);
+					// $("#stop").val(data.thresold[1]);
 					var processed_json = new Array();
 					for (i = 0; i < data["s1"].length; i++) {
-						processed_json.push([Date.parse(data["s1"][i].mtimestamp), parseFloat(data["s1"][i].avg_price)]);
+						processed_json.push([Date.parse(data["s1"][i][0]), parseFloat(data["s1"][i][1])]);
 					}
-					var news1 = new Array();
-					var news2 = new Array();	            
-					for (i = 0; i < data["s1_news"].length; i++){
-						news1.push({
-								color: '#3262a8', // Red
-								width: 2,
-								value: Date.parse(data["s1_news"][i].time) // Position, you'll have to translate this to the values on your x axis
-							})
-					}
-					for (i = 0; i < data["s2_news"].length; i++){
-						news2.push({
-								color: '#cf1d1d', // Red
-								width: 2,
-								value: Date.parse(data["s2_news"][i].time) // Position, you'll have to translate this to the values on your x axis
-							})
-					}	        
+					// var news1 = new Array();
+					// var news2 = new Array();	            
+					// for (i = 0; i < data["s1_news"].length; i++){
+					// 	news1.push({
+					// 			color: '#3262a8', // Red
+					// 			width: 2,
+					// 			value: Date.parse(data["s1_news"][i].time) // Position, you'll have to translate this to the values on your x axis
+					// 		})
+					// }
+					// for (i = 0; i < data["s2_news"].length; i++){
+					// 	news2.push({
+					// 			color: '#cf1d1d', // Red
+					// 			width: 2,
+					// 			value: Date.parse(data["s2_news"][i].time) // Position, you'll have to translate this to the values on your x axis
+					// 		})
+					// }	        
 	
 							// draw chart
 					Highcharts.stockChart('container1', {
 					  time: {
-						useUTC: false
+						useUTC: true
 					  },
 	
 					  rangeSelector: {
@@ -406,10 +417,10 @@
 					  },
 	
 					  title: {
-						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " 股價"
+						text: data["s_info"][0]["cname"] + " " + s1//data["s_info"][0]["cname"] + " " + s1//data["s1_info"]["s_name"] + " (" + s1 + ") " + " 股價"
 					  },
 					  subtitle: {
-						text: "Price std: " + String(parseFloat(data["s1_std"]).toFixed(4))
+						text: ""//"Price std: " + String(parseFloat(data["s1_std"]).toFixed(4))
 						},
 	
 					  exporting: {
@@ -428,7 +439,7 @@
 								hour: '%I %p',
 								minute: '%I:%M %p'
 							},
-							plotLines: news1
+							//plotLines: news1
 						},
 					  series: [{
 						name: s1,
@@ -438,7 +449,7 @@
 	
 					var processed_json2 = new Array();
 					for (i = 0; i < data["s2"].length; i++) {
-						processed_json2.push([Date.parse(data["s2"][i].mtimestamp), parseFloat(data["s2"][i].avg_price)]);
+						processed_json2.push([Date.parse(data["s2"][i][0]), parseFloat(data["s2"][i][1])]);
 					}
 					// console.log(processed_json2);
 	
@@ -446,7 +457,7 @@
 					Highcharts.stockChart('container2', {
 	
 					  time: {
-						useUTC: false
+						useUTC: true
 					  },
 	
 					  rangeSelector: {
@@ -469,10 +480,10 @@
 							enabled: false
 						},
 					  title: {
-						text: data["s2_info"]["s_name"] + " (" + s2 + ") " + " 股價"
+						text: data["s_info"][1]["cname"] + " " + s2// data["s2_info"]["s_name"] + " (" + s2 + ") " + " 股價"
 					  },
 					  subtitle: {
-						text: "Price std: " +String(parseFloat(data["s2_std"]).toFixed(4))
+						text: ""//"Price std: " +String(parseFloat(data["s2_std"]).toFixed(4))
 						},
 						xAxis: {
 							type: 'datetime',
@@ -481,8 +492,8 @@
 								hour: '%I %p',
 								minute: '%I:%M %p'
 							},
-							plotLines: news2
-						},  
+							//plotLines: news1
+						},
 	
 					  exporting: {
 						enabled: false
@@ -499,28 +510,41 @@
 	
 	
 					var processed_json3 = new Array();
-	
 					var max_spread = -Infinity;
 					var min_spread = Infinity;
 					for (i = 0; i < data["spread"].length; i++) {
-						processed_json3.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread"][i].avg_price)]);
-						//processed_json3.push([i, parseFloat(data["spread"][i].avg_price)]);
-						max_spread = Math.max(max_spread, data["spread"][i].avg_price);
-						min_spread = Math.min(min_spread, data["spread"][i].avg_price);
+						processed_json3.push([Date.parse(data["spread"][i][0]), parseFloat(data["spread"][i][1])]);
+						max_spread = Math.max(max_spread, data["spread"][i][1]);
+						min_spread = Math.min(min_spread, data["spread"][i][1]);
 					}
-					var processed_json3_1 = new Array();
-					var spread_m_l = data["spread_m"].length + 16;
-					for (i = 16; i < data["spread"].length; i++) {
-						if(i<spread_m_l){
-							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
-						}
-						else{
-							processed_json3_1.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
-						}
+					// var _mean = new Array();
+					// var spread_m_l = data["spread_m"].length + 16;
+					// for (i = 16; i < data["spread"].length; i++) {
+					// 	if(i<spread_m_l){
+					// 		_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
+					// 	}
+					// 	else{
+					// 		_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
+					// 	}
 						
+					// }	
+					// console.log(_mean);		
+
+
+					var _mean = new Array();
+					var _openup = new Array();
+					var _opendown = new Array();
+					var _stopup = new Array();
+					var _stopdown = new Array();
+					for (i = 0; i < data["mean"].length; i++) {
+						_mean.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1])]);
+						_openup.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] + 1.5*std)]);
+						_opendown.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] - 1.5*std)]);
+						_stopup.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] + 2.5*std)]);
+						_stopdown.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] - 2.5*std)]);
 					}	
-					console.log(processed_json3_1);		
-	
+					console.log(_mean);							
+					console.log(_openup);		
 							// draw chart
 					var chart3 = Highcharts.stockChart('container3', {
 						chart: {
@@ -538,7 +562,7 @@
 						verticalAlign: "top",
 					},
 					  time: {
-						useUTC: false
+						useUTC: true
 					  },
 					  
 					  rangeSelector: {
@@ -557,36 +581,36 @@
 						inputEnabled: false,
 						selected: 2
 					  },
-						yAxis: {
-							max : Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
-							min : Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
-							plotLines: [
-							{
-								value: parseFloat(e_mu) + parseFloat(data.thresold[0]) * parseFloat(e_stdev),
-								color: '#3A97F4',
-								width: 1,
-								dashStyle: 'shortdash'
-							},
-							{
-								value: parseFloat(e_mu) - parseFloat(data.thresold[0]) * parseFloat(e_stdev),
-								color: '#3A97F4',
-								width: 1,
-								dashStyle: 'shortdash'
-							},	
-							{
-								value: parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev),
-								color: '#EB1E1E',
-								width: 1,
-								dashStyle: 'shortdash'
-							},
-							{
-								value: parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev),
-								color: '#EB1E1E',
-								width: 1,
-								dashStyle: 'shortdash'
-							},		            
-							]
-						},
+						// yAxis: {
+						// 	max : Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
+						// 	min : Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
+						// 	plotLines: [
+						// 	{
+						// 		value: parseFloat(e_mu) + parseFloat(data.thresold[0]) * parseFloat(e_stdev),
+						// 		color: '#3A97F4',
+						// 		width: 1,
+						// 		dashStyle: 'shortdash'
+						// 	},
+						// 	{
+						// 		value: parseFloat(e_mu) - parseFloat(data.thresold[0]) * parseFloat(e_stdev),
+						// 		color: '#3A97F4',
+						// 		width: 1,
+						// 		dashStyle: 'shortdash'
+						// 	},	
+						// 	{
+						// 		value: parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev),
+						// 		color: '#EB1E1E',
+						// 		width: 1,
+						// 		dashStyle: 'shortdash'
+						// 	},
+						// 	{
+						// 		value: parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev),
+						// 		color: '#EB1E1E',
+						// 		width: 1,
+						// 		dashStyle: 'shortdash'
+						// 	},		            
+						// 	]
+						// },
 	
 						xAxis: {
 							type: 'datetime',
@@ -595,10 +619,10 @@
 								hour: '%I %p',
 								minute: '%I:%M %p'
 							},
-							plotLines: news1.concat(news2)
+							//plotLines: news1.concat(news2)
 						},
 					  title: {
-						text: data["s1_info"]["s_name"] + " (" + s1 + ") " + " + " + data["s2_info"]["s_name"] + " (" + s2 + ") " + " 共整合序列"
+						text: data["s_info"][0]["cname"] + " (" + s1 + ") " + " + " + data["s_info"][1]["cname"] + " (" + s2 + ") " + " 共整合序列"
 					  },
 						navigator: {
 							enabled: false
@@ -616,168 +640,137 @@
 						color: '#875F9A'
 						}, 
 						{
-						name: "Convergence Mean",
-						data: processed_json3_1,
+						name: "mean",
+						data: _mean,
 						color: '#02d41b'
-						}, 
+						},
 						{
-							marker: {
-								enabled: false
-							},
-							name: 'Open',
-							plotLinesIndex: 1,
-							color: '#3A97F4'
-						},					
+						name: "up open",
+						data: _openup,
+						color: '#3A97F4',
+						width: 0.2,
+						dashStyle: 'shortdash'
+						},
 						{
-							marker: {
-								enabled: false
-							},
-							name: 'Stop',
-							plotLinesIndex: 2,
-							color: '#EB1E1E'
-						}]
+						name: "down open",
+						data: _opendown,
+						color: '#3A97F4',
+						width: 0.2,
+						dashStyle: 'shortdash'
+						},
+						{
+						name: "up stop",
+						data: _stopup,
+						color: '#EB1E1E',
+						width: 0.2,
+						dashStyle: 'shortdash'
+						},
+						{
+						name: "down stop",
+						data: _stopdown,
+						color: '#EB1E1E',
+						width: 0.2,
+						dashStyle: 'shortdash'
+						},													
+						// {
+						// name: "Convergence Mean",
+						// data: _mean,
+						// color: '#02d41b'
+						// }, 
+						// {
+						// 	marker: {
+						// 		enabled: false
+						// 	},
+						// 	name: 'Open',
+						// 	plotLinesIndex: 1,
+						// 	color: '#3A97F4'
+						// },					
+						// {
+						// 	marker: {
+						// 		enabled: false
+						// 	},
+						// 	name: 'Stop',
+						// 	plotLinesIndex: 2,
+						// 	color: '#EB1E1E'
+						// }
+					]
 					});
-//------------------------------------------------------------------------------------------------------/
-					var processed_json4 = new Array();
-					for (i = 0; i < data["spread"].length; i++) {
-						if(i<150){
-							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), 0]);
-						}
-						else if(i>=265){
-							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), 0]);
-						}
-						else{
-							processed_json4.push([Date.parse(data["s2"][i].mtimestamp), parseFloat(data["sb_pred"]["prob"][i-150])]);
-						}		
-					}
-					// console.log(processed_json2);
-	
-							// draw chart
-					Highcharts.stockChart('container4', {
-	
-					  time: {
-						useUTC: false
-					  },
-	
-					  rangeSelector: {
-						buttons: [{
-						  count: 1,
-						  type: 'minute',
-						  text: '1M'
-						}, {
-						  count: 5,
-						  type: 'minute',
-						  text: '5M'
-						}, {
-						  type: 'all',
-						  text: 'All'
-						}],
-						inputEnabled: false,
-						selected: 2
-					  },
-						navigator: {
-							enabled: false
-						},
-					  title: {
-						text: "Structure Break Prediction"
-					  },
-						xAxis: {
-							type: 'datetime',
-	
-							dateTimeLabelFormats : {
-								hour: '%I %p',
-								minute: '%I:%M %p'
-							},
-							plotLines: news2
-						},  
-	
-					  exporting: {
-						enabled: false
-					  },
-						scrollbar: {
-							enabled: false
-						},
-					  series: [{
-						name: s2,
-						data: processed_json4,
-						color: '#FF0000'
-					  }]
-					});	
+
 			$( "#pairs_table" ).hide(500);
 			$( "#time_pick" ).hide();
 			$( "#pairs_chart" ).show( 500 );
 			$( "#go_trade" ).show();
 			$( "#pairs_found" ).removeClass( "active" );
 			$( "#trade_result" ).addClass( "active" );
-			pairs_info = "<tr><td class=' center aligned '> Convergence &nbsp Mean" + "</td>" + 
-			"<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + 
-			"<td class=' center aligned '> 開倉門檻 " + "</td>" +
-			"<td class=' center aligned '>" + data.thresold[0].toFixed(4) + "</td></tr>" +
-			"<tr><td class=' center aligned '> Expected stdev" +"</td>" + 
-			"<td class=' center aligned '>" + String(parseFloat(e_stdev).toFixed(4)) + "</td>" + 
-			"<td class=' center aligned '> 停損門檻 " + "</td>" +
-			"<td class=' center aligned '>" + data.thresold[1].toFixed(4) + "</td></tr>" +
-			"<tr><td class=' center aligned '>" + String(s1) + " 權重" +"</td>" + 
-			"<td class=' center aligned '>" + String(parseFloat(w1).toFixed(4)) + "</td>" + 
-			"<td class=' center aligned '> 股票最大持有張數" + "</td>" +
-			"<td class=' center aligned '>5</td></tr>" +
-			"<tr><td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + 
-			"<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" +
-			"<td class=' center aligned '> 交易成本" + "</td>" +
-			"<td class=' center aligned '>0.0015%</td></tr>";
-			document.getElementById("pairs_info").innerHTML = pairs_info;
+			// pairs_info = "<tr><td class=' center aligned '> Convergence &nbsp Mean" + "</td>" + 
+			// "<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + 
+			// "<td class=' center aligned '> 開倉門檻 " + "</td>" +
+			// "<td class=' center aligned '>" + data.thresold[0].toFixed(4) + "</td></tr>" +
+			// "<tr><td class=' center aligned '> Expected stdev" +"</td>" + 
+			// "<td class=' center aligned '>" + String(parseFloat(e_stdev).toFixed(4)) + "</td>" + 
+			// "<td class=' center aligned '> 停損門檻 " + "</td>" +
+			// "<td class=' center aligned '>" + data.thresold[1].toFixed(4) + "</td></tr>" +
+			// "<tr><td class=' center aligned '>" + String(s1) + " 權重" +"</td>" + 
+			// "<td class=' center aligned '>" + String(parseFloat(w1).toFixed(4)) + "</td>" + 
+			// "<td class=' center aligned '> 股票最大持有張數" + "</td>" +
+			// "<td class=' center aligned '>5</td></tr>" +
+			// "<tr><td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + 
+			// "<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" +
+			// "<td class=' center aligned '> 交易成本" + "</td>" +
+			// "<td class=' center aligned '>0.0015%</td></tr>";
+			// document.getElementById("pairs_info").innerHTML = pairs_info;
 	
-				trade_news_table = "";
-					if (data["s1_news"].length == 0 && data["s2_news"].length  == 0){
-						trade_news_table = "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無新聞" + "</td>" + "</tr>" ;	            	
-					}
-					else{
+				// trade_news_table = "";
+				// 	if (data["s1_news"].length == 0 && data["s2_news"].length  == 0){
+				// 		trade_news_table = "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無新聞" + "</td>" + "</tr>" ;	            	
+				// 	}
+				// 	else{
 	
-						for (i = 0; i < data["s1_news"].length; i++) {
-							tmp = data["s1_news"][i];
-							console.log(tmp)
-							// trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
-							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s1_news_" + String(i) + "><i class='arrow down icon' style='color:green'></i></td>"+"</tr>"; 
-						}
-						for (i = 0; i < data["s2_news"].length; i++) {
-							tmp = data["s2_news"][i];
-							// trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
-							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s2_news_" + String(i) + "><i class='arrow up icon' style='color:red'></i></td>"+"</tr>"; 
+				// 		for (i = 0; i < data["s1_news"].length; i++) {
+				// 			tmp = data["s1_news"][i];
+				// 			console.log(tmp)
+				// 			// trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
+				// 			trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s1_news_" + String(i) + "><i class='arrow down icon' style='color:green'></i></td>"+"</tr>"; 
+				// 		}
+				// 		for (i = 0; i < data["s2_news"].length; i++) {
+				// 			tmp = data["s2_news"][i];
+				// 			// trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
+				// 			trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s2_news_" + String(i) + "><i class='arrow up icon' style='color:red'></i></td>"+"</tr>"; 
 	
-						}
-					}
-					document.getElementById("trade_news").innerHTML = trade_news_table;
+				// 		}
+				// 	}
+				// 	document.getElementById("trade_news").innerHTML = trade_news_table;
 	
-					for (i = 0 ; i< data["s2_news"].length; i++){
-						$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
-						// pos = Math.floor((Math.random() * 100) + 1);
-						// console.log(pos);
-						// if(pos%2){
-						// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
-						// }
-						// else{
-						// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
-						// }
-						// $('#s2_news_'+String(i)).progress({
-						//   percent: pos
-						// });
-					}
-					for (i = 0 ; i< data["s1_news"].length; i++){
-						$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
-						// pos = Math.floor((Math.random() * 100) + 1);
-						// if(pos%2){
-						// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
-						// }
-						// else{
-						// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
-						// }
-						// $('#s1_news_'+String(i)).progress({
-						//   percent: pos
-						// });
-					}
+					// for (i = 0 ; i< data["s2_news"].length; i++){
+					// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+					// 	// pos = Math.floor((Math.random() * 100) + 1);
+					// 	// console.log(pos);
+					// 	// if(pos%2){
+					// 	// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+					// 	// }
+					// 	// else{
+					// 	// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+					// 	// }
+					// 	// $('#s2_news_'+String(i)).progress({
+					// 	//   percent: pos
+					// 	// });
+					// }
+					// for (i = 0 ; i< data["s1_news"].length; i++){
+					// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+					// 	// pos = Math.floor((Math.random() * 100) + 1);
+					// 	// if(pos%2){
+					// 	// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow down icon'></i>"
+					// 	// }
+					// 	// else{
+					// 	// 	$('#s1_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
+					// 	// }
+					// 	// $('#s1_news_'+String(i)).progress({
+					// 	//   percent: pos
+					// 	// });
+					// }
 	
 	
-			start_backtest(day, s1, s2, data.thresold[0], data.thresold[1]);
+			//start_backtest(day, s1, s2, data.thresold[0], data.thresold[1]);
 			}
 		 });
 	

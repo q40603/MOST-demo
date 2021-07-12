@@ -45,7 +45,7 @@ def tax( stock1_payoff , stock2_payoff , pos , tax_cost ):
             stock1_payoff = stock1_payoff * short_selling_cost
             stock2_payoff = stock2_payoff * short_selling_cost
         
-    if pos == 0 or pos == -2:                                                               # 考慮平倉的交易成本
+    if pos == -2 or pos == -4 or pos == 666:                                                               # 考慮平倉的交易成本
         
         if stock1_payoff < 0 and stock2_payoff < 0 :
             

@@ -19,7 +19,7 @@
 	
 	<body>
 	{% include "nav_bar.html" %}
-		<div class="ui grid" style="margin: 3vh 5vw 5vw; min-height: 78vh;">
+		<div class="ui grid" style="margin: 3vh 5vw 5vw; min-height: 85vh;">
 			<div class="six column centered row" style="height: 10vh;">
 				<div class="ui steps">
 				  <div class="active step" id = "calendar">
@@ -62,15 +62,15 @@
 			<div class="centered row" id = "summary_chart" style="height: 45vh; margin-top: 13vh;">
 				<div class="one wide column"></div>
 				<div class="seven wide column">
-					<div id="container0_1"></div>
+					<div id="daily_summary"></div>
 				</div>
 				<div class="seven wide column">
-					<div id="container0_2"></div>
+					<div id="daily_profit"></div>
 				</div>
 				<div class="one wide column"></div>
 				<!-- <button id="submit1" class="positive ui button">下一步</button> -->
 			</div>
-			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 65vh; overflow-y: scroll;">
+			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 75vh; overflow-y: scroll;">
 				  <h3>配對</h3>
 					<table class="ui celled table accordion">
 					  <thead>
@@ -83,8 +83,9 @@
 						<th class=' center aligned '>股票 2</th>
 						<th class=' center aligned '>權重 1</th>
 						<th class=' center aligned '>權重 2</th>
-						<!-- <th class=' center aligned '>交易策略</th>
-						<th class=' center aligned '>報酬率</th> -->
+						<th class=' center aligned '>Model</th>
+						<!-- <th class=' center aligned '>交易策略</th> -->
+						<th class=' center aligned '>報酬率</th>
 						<th class=' center aligned '>開始交易</th>
 					  </tr>
 
@@ -93,13 +94,13 @@
 					  </tbody>
 					</table>			  
 			</div>
-			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 100vh;">
-				<div class="eight wide column" id="trade_result" style="height: 120vh; overflow-y: scroll;">
+			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 75vh;">
+				<div class="eight wide column" id="trade_result" style="height: 75vh; overflow-y: scroll;">
 					<table class="ui red celled striped table">
 						<thead>
 						  <tr>
-							  <th colspan="2">配對資訊</th>
-							  <th colspan="2">交易資訊</th>
+							  <th class=' center aligned ' colspan="2">配對資訊</th>
+							  <th class=' center aligned ' colspan="2">交易資訊</th>
 						</tr></thead>
 						<tbody id="pairs_info">
 								<tr>
@@ -111,10 +112,10 @@
 					<table class="ui teal celled striped table" style="max-height: 20vh; overflow-y: scroll;">
 					  <thead>
 						<tr>
-						<tr><th>公司</th>
-						<th>時間</th>
-						<th>新聞</th>
-						<th>漲跌預測</th>
+						<tr><th class=' center aligned ' >公司</th>
+						<th class=' center aligned '>時間</th>
+						<th class=' center aligned '>新聞</th>
+						<!-- <th class=' center aligned '>漲跌預測</th> -->
 					  </tr></thead>
 	
 					  <tbody id="trade_news">
@@ -124,7 +125,7 @@
 					<table class="ui blue celled striped table" style="max-height: 50vh; overflow-y: scroll;" id="trade_history">
 					  <thead>
 						<tr>
-							<th>交易過程</th>
+							<th class=' center aligned '>交易過程</th>
 					  </tr></thead>
 	
 					  <tbody>
@@ -136,7 +137,7 @@
 				<div id="container1" style="height: 25vh; min-width: 100%; "></div>
 				<div id="container2" style="height: 25vh; min-width: 100%;  "></div>
 				<div id="container3" style="min-width: 100%; "></div>
-				<div id="container4" style="height: 25vh; min-width: 100%; "></div>
+				<!-- <div id="container4" style="height: 25vh; min-width: 100%; "></div> -->
 				</div>
 			</div>
 	
@@ -174,107 +175,137 @@
 			}
 		  }
 		});
+		$.ajax({
+			type:"GET",
+				dataType: 'json',
+				url: "/stock/get_past_five",
+				success: function(response) {
+					data = response;
+					console.log(data);
 
-		Highcharts.chart('container0_1', {
-			chart: {
-				type: 'column'
-			},
-			title: {
-				text: 'Pairs trade daily summary'
-			},
-			xAxis: {
-				categories: ['9/11', '9/14', '9/16', '9/17', '9/18']
-			},
-			yAxis: {
-				min: 0,
-				title: {
-					text: 'Total Pair Found'
-				},
-				stackLabels: {
-					enabled: true,
-					style: {
-						fontWeight: 'bold',
-						color: ( // theme
-							Highcharts.defaultOptions.title.style &&
-							Highcharts.defaultOptions.title.style.color
-						) || 'gray'
+					var past_five_date = [];
+					var _win = [];
+					var _loss = [];
+					var _zero = [];
+					var _profit = [];
+					let dl = data.length;
+					// var _date, _month, _day;
+					for(var i = dl-1 ; i >= 0; i--){
+						_date = new Date(data[i]["time"]);
+						_day = _date.toLocaleString('default', { month: 'long',day: 'numeric' });
+						past_five_date.push(_day);
+						_zero.push(data[i]["record"]["zero"]);
+						_win.push(data[i]["record"]["win"]);
+						_loss.push(data[i]["record"]["loss"]);
+						_profit.push(Math.floor(parseFloat(data[i]["record"]["total_profit"])*1000))
 					}
-				}
-			},
-			colors: ["#f79494","#bdbdbd","#a2f794"],
-			legend: {
-				align: 'right',
-				x: -30,
-				verticalAlign: 'top',
-				y: 25,
-				floating: true,
-				backgroundColor:
-					Highcharts.defaultOptions.legend.backgroundColor || 'white',
-				borderColor: '#CCC',
-				borderWidth: 1,
-				shadow: false
-			},
-			tooltip: {
-				headerFormat: '<b>{point.x}</b><br/>',
-				pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
-			},
-			plotOptions: {
-				column: {
-					stacking: 'normal',
-					dataLabels: {
-						enabled: true
+					Highcharts.chart('daily_summary', {
+					chart: {
+						type: 'column'
+					},
+					title: {
+						text: 'Pairs trade daily summary'
+					},
+					xAxis: {
+						categories: past_five_date
+					},
+					yAxis: {
+						min: 0,
+						title: {
+							text: 'Total Pair Found'
+						},
+						stackLabels: {
+							enabled: true,
+							style: {
+								fontWeight: 'bold',
+								color: ( // theme
+									Highcharts.defaultOptions.title.style &&
+									Highcharts.defaultOptions.title.style.color
+								) || 'gray'
+							}
+						}
+					},
+					colors: ["#f79494","#a2f794","#bdbdbd"],
+					legend: {
+						align: 'right',
+						x: -30,
+						verticalAlign: 'top',
+						y: 25,
+						floating: true,
+						backgroundColor:
+							Highcharts.defaultOptions.legend.backgroundColor || 'white',
+						borderColor: '#CCC',
+						borderWidth: 1,
+						shadow: false
+					},
+					tooltip: {
+						headerFormat: '<b>{point.x}</b><br/>',
+						pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+					},
+					plotOptions: {
+						column: {
+							stacking: 'normal',
+							dataLabels: {
+								enabled: true
+							}
+						}
+					},
+					series: [{
+						name: 'win',
+						data: _win
+					},
+					{
+						name: 'loss',
+						data: _loss
+					},
+					{
+						name: 'zero',
+						data: _zero
 					}
+				]
+				});
+
+
+				Highcharts.chart('daily_profit', {
+					chart: {
+						type: 'column'
+					},
+					title: {
+						text: 'Pairs trade daily profit'
+					},
+
+					yAxis: {
+						title: {
+							text: 'Profit'
+						}
+					},
+
+					xAxis: {
+						categories: past_five_date
+					},
+
+					legend: {
+						layout: 'vertical',
+						align: 'right',
+						x: -30,
+						verticalAlign: 'top',
+						y: 25,
+						floating: true,
+
+					},
+
+
+					series: [{
+						name: 'Profit',
+						data: _profit
+					}],
+
+
+				});	
 				}
-			},
-			series: [{
-				name: 'win',
-				data: [147, 106, 95, 117, 178]
-			}, {
-				name: 'zero',
-				data: [104, 125, 75, 95, 104]
-			}, {
-				name: 'loss',
-				data: [166, 242, 178, 162, 101]
-			}]
 		});
 
-
-		Highcharts.chart('container0_2', {
-			chart: {
-				type: 'column'
-			},
-			title: {
-				text: 'Pairs trade daily profit'
-			},
-
-			yAxis: {
-				title: {
-					text: 'Profit'
-				}
-			},
-
-			xAxis: {
-				categories: ['9/11', '9/14', '9/16', '9/17', '9/18']
-			},
-
-			legend: {
-				layout: 'vertical',
-				align: 'right',
-				x: -30,
-				verticalAlign: 'top',
-				y: 25,
-				floating: true,
-
-			},
-
-
-			series: [{
-				name: 'Profit',
-				data: [10.315, -379.898, -253.516, -402.924, -661.415]
-			}],
-
-
-		});		
+	
 
 	});
 	$('#submit1').click(function(){
@@ -296,9 +327,9 @@
 					risk = ['#94fa7a;', '#fa7575' , '#ffffff']
 					buy = ["Short", "Long", "Neutral"]
 					text = ""
-					
+					let dl = data.length;
 					// document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
-					for (var i = 0 ; i < data.length; i++){
+					for (var i = 0 ; i < dl; i++){
 						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>";
 	
 						if(data[i]["w1"]<0){
@@ -313,20 +344,21 @@
 						else{
 							text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
 						}
-						
+
+						text += "<td class=' center aligned '>"  +String(data[i]["model"]) + "</td>";
 
 						// text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
-						// if (data[i]["rt"]<0){
-						// 	text += "<td class=' center aligned ' style='background:#acff80;'>"
-						// }
-						// else if (data[i]["rt"]>0){
-						// 	text += "<td class=' center aligned ' style='background:#ff8080;'>"
-						// }
-						// else{
-						// 	text += "<td class=' center aligned '>"
-						// }
+						if (data[i]["return"]<0){
+							text += "<td class=' center aligned ' style='background:#acff80;'>"
+						}
+						else if (data[i]["return"]>0){
+							text += "<td class=' center aligned ' style='background:#ff8080;'>"
+						}
+						else{
+							text += "<td class=' center aligned '>"
+						}
 						// text += "<td class=' center aligned '>";
-						// text += String(parseFloat(data[i]["rt"]*100).toFixed(4)) + "%</td>"
+						text += String(parseFloat(data[i]["_return"]).toFixed(3)) + "%</td>"
 						// text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
 						text += "<td class=' center aligned' ><button class='center aligned ui button trade' ";
 						text +=	"pairId = " + i;
@@ -373,25 +405,29 @@
 					// $("#open").val(data.thresold[0]);
 					// $("#stop").val(data.thresold[1]);
 					var processed_json = new Array();
-					for (i = 0; i < data["s1"].length; i++) {
+					let ds1_len = data["s1"].length;
+					let ds2_len = data["s1"].length;
+					for (i = 0; i < ds1_len; i++) {
 						processed_json.push([Date.parse(data["s1"][i][0]), parseFloat(data["s1"][i][1])]);
 					}
-					// var news1 = new Array();
-					// var news2 = new Array();	            
-					// for (i = 0; i < data["s1_news"].length; i++){
-					// 	news1.push({
-					// 			color: '#3262a8', // Red
-					// 			width: 2,
-					// 			value: Date.parse(data["s1_news"][i].time) // Position, you'll have to translate this to the values on your x axis
-					// 		})
-					// }
-					// for (i = 0; i < data["s2_news"].length; i++){
-					// 	news2.push({
-					// 			color: '#cf1d1d', // Red
-					// 			width: 2,
-					// 			value: Date.parse(data["s2_news"][i].time) // Position, you'll have to translate this to the values on your x axis
-					// 		})
-					// }	        
+					var news1 = new Array();
+					var news2 = new Array();
+					let s1News_len = data["s1_news"].length;	 
+					let s2News_len = data["s2_news"].length;           
+					for (i = 0; i < s1News_len; i++){
+						news1.push({
+								color: '#3262a8', // Red
+								width: 2,
+								value: Date.parse(data["s1_news"][i]["pubtime"]) // Position, you'll have to translate this to the values on your x axis
+							})
+					}
+					for (i = 0; i < s2News_len; i++){
+						news2.push({
+								color: '#cf1d1d', // Red
+								width: 2,
+								value: Date.parse(data["s2_news"][i]["pubtime"]) // Position, you'll have to translate this to the values on your x axis
+							})
+					}	        
 	
 							// draw chart
 					Highcharts.stockChart('container1', {
@@ -439,7 +475,7 @@
 								hour: '%I %p',
 								minute: '%I:%M %p'
 							},
-							//plotLines: news1
+							plotLines: news1
 						},
 					  series: [{
 						name: s1,
@@ -448,7 +484,7 @@
 					});
 	
 					var processed_json2 = new Array();
-					for (i = 0; i < data["s2"].length; i++) {
+					for (i = 0; i < ds2_len; i++) {
 						processed_json2.push([Date.parse(data["s2"][i][0]), parseFloat(data["s2"][i][1])]);
 					}
 					// console.log(processed_json2);
@@ -492,7 +528,7 @@
 								hour: '%I %p',
 								minute: '%I:%M %p'
 							},
-							//plotLines: news1
+							plotLines: news2
 						},
 	
 					  exporting: {
@@ -517,18 +553,17 @@
 						max_spread = Math.max(max_spread, data["spread"][i][1]);
 						min_spread = Math.min(min_spread, data["spread"][i][1]);
 					}
-					// var _mean = new Array();
-					// var spread_m_l = data["spread_m"].length + 16;
-					// for (i = 16; i < data["spread"].length; i++) {
-					// 	if(i<spread_m_l){
-					// 		_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
-					// 	}
-					// 	else{
-					// 		_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
-					// 	}
+					var _converge = new Array();
+					for (i = 0; i < data["converge_mean"].length; i++) {
+						_converge.push([Date.parse(data["converge_mean"][i][0]), parseFloat(data["converge_mean"][i][1])]);
+						// if(i<spread_m_l){
+						// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
+						// }
+						// else{
+						// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
+						// }
 						
-					// }	
-					// console.log(_mean);		
+					}	
 
 
 					var _mean = new Array();
@@ -536,15 +571,20 @@
 					var _opendown = new Array();
 					var _stopup = new Array();
 					var _stopdown = new Array();
-					for (i = 0; i < data["mean"].length; i++) {
+					var max_up = -Infinity;
+					var min_down = Infinity;
+					let dmean_len = data["mean"].length;
+					for (i = 0; i < dmean_len; i++) {
 						_mean.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1])]);
 						_openup.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] + 1.5*std)]);
 						_opendown.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] - 1.5*std)]);
 						_stopup.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] + 2.5*std)]);
 						_stopdown.push([Date.parse(data["mean"][i][0]), parseFloat(data["mean"][i][1] - 2.5*std)]);
+						max_up = Math.max(max_up, parseFloat(data["mean"][i][1] + 2.5*std));
+						min_down = Math.min(min_down, parseFloat(data["mean"][i][1] - 2.5*std));
 					}	
-					console.log(_mean);							
-					console.log(_openup);		
+					console.log(max_up);							
+					console.log(min_down);		
 							// draw chart
 					var chart3 = Highcharts.stockChart('container3', {
 						chart: {
@@ -581,6 +621,10 @@
 						inputEnabled: false,
 						selected: 2
 					  },
+						yAxis: {
+							max : Math.max(max_up,max_spread),//Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
+							min : Math.min(min_down,min_spread)//Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
+						},
 						// yAxis: {
 						// 	max : Math.max(parseFloat(e_mu) + parseFloat(data.thresold[1]) * parseFloat(e_stdev), max_spread),
 						// 	min : Math.min(parseFloat(e_mu) - parseFloat(data.thresold[1]) * parseFloat(e_stdev), min_spread),
@@ -645,6 +689,12 @@
 						color: '#02d41b'
 						},
 						{
+						name: "converge mean",
+						data: _converge,
+						color: '#34ebeb',
+						width: 0.2,
+						},
+						{
 						name: "up open",
 						data: _openup,
 						color: '#3A97F4',
@@ -702,44 +752,54 @@
 			$( "#go_trade" ).show();
 			$( "#pairs_found" ).removeClass( "active" );
 			$( "#trade_result" ).addClass( "active" );
-			// pairs_info = "<tr><td class=' center aligned '> Convergence &nbsp Mean" + "</td>" + 
-			// "<td class=' center aligned '>" + String(parseFloat(e_mu).toFixed(4)) + "</td>" + 
-			// "<td class=' center aligned '> 開倉門檻 " + "</td>" +
-			// "<td class=' center aligned '>" + data.thresold[0].toFixed(4) + "</td></tr>" +
-			// "<tr><td class=' center aligned '> Expected stdev" +"</td>" + 
-			// "<td class=' center aligned '>" + String(parseFloat(e_stdev).toFixed(4)) + "</td>" + 
-			// "<td class=' center aligned '> 停損門檻 " + "</td>" +
-			// "<td class=' center aligned '>" + data.thresold[1].toFixed(4) + "</td></tr>" +
-			// "<tr><td class=' center aligned '>" + String(s1) + " 權重" +"</td>" + 
-			// "<td class=' center aligned '>" + String(parseFloat(w1).toFixed(4)) + "</td>" + 
-			// "<td class=' center aligned '> 股票最大持有張數" + "</td>" +
-			// "<td class=' center aligned '>5</td></tr>" +
-			// "<tr><td class=' center aligned '> " + String(s2) + " 權重" +"</td>" + 
-			// "<td class=' center aligned '>" + String(parseFloat(w2).toFixed(4)) + "</td>" +
-			// "<td class=' center aligned '> 交易成本" + "</td>" +
-			// "<td class=' center aligned '>0.0015%</td></tr>";
-			// document.getElementById("pairs_info").innerHTML = pairs_info;
+			pairs_info = "<tr><td class=' center aligned '> Model Type" +"</td>" + 
+			"<td class=' center aligned '>" + String(pair[parseInt(pairId)]["model"]) + "</td>" + 
+			"<td class=' center aligned '> 開倉門檻 " + "</td>" +
+			"<td class=' center aligned '>" + "1.5x" + "</td></tr>" +
+			"<tr><td class=' center aligned '> Stdandard Deviation" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(pair[parseInt(pairId)]["std"]).toFixed(8)) + "</td>" + 
+			"<td class=' center aligned '> 停損門檻 " + "</td>" +
+			"<td class=' center aligned '>" + "不停損" + "</td></tr>" +
+			"<tr><td class=' center aligned '> Johansen &nbsp Intercept</td>" +  
+			"<td class=' center aligned '>" + String(parseFloat(pair[parseInt(pairId)]["Johansen_intercept"]).toFixed(8)) + "</td>" + 
+			"<td class=' center aligned '> 股票最大持有張數" + "</td>" +
+			"<td class=' center aligned '>5</td></tr>" +
+			"<tr><td class=' center aligned '> Johansen &nbsp Slope " + "</td>" +
+			"<td class=' center aligned '>" + String(parseFloat(pair[parseInt(pairId)]["Johansen_slope"]).toFixed(8)) + "</td>" +
+
+			"<td class=' center aligned '> 交易成本" + "</td>" +
+			"<td class=' center aligned '>0.15%</td></tr>" +
+			"<tr><td class=' center aligned '>" + String(s1) + " 資金權重" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(w1).toFixed(8)) + "</td>" + 
+			"<td class=' center aligned '> 交易成本門檻" + "</td>" +
+			"<td class=' center aligned '>0.15%</td></tr>" +
+
+			"<tr><td class=' center aligned '> " + String(s2) + " 資金權重" +"</td>" + 
+			"<td class=' center aligned '>" + String(parseFloat(w2).toFixed(8)) + "</td>" +
+			"<td class=' center aligned '></td>" +
+			"<td class=' center aligned '></td></tr>";
+			document.getElementById("pairs_info").innerHTML = pairs_info;
 	
-				// trade_news_table = "";
-				// 	if (data["s1_news"].length == 0 && data["s2_news"].length  == 0){
-				// 		trade_news_table = "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無新聞" + "</td>" + "</tr>" ;	            	
-				// 	}
-				// 	else{
+				trade_news_table = "";
+					if (s1News_len == 0 && s2News_len  == 0){
+						trade_news_table = "<tr>"+ "<td class=' center aligned ' rowspan='2'>" + "無新聞" + "</td>" + "</tr>" ;	            	
+					}
+					else{
 	
-				// 		for (i = 0; i < data["s1_news"].length; i++) {
-				// 			tmp = data["s1_news"][i];
-				// 			console.log(tmp)
-				// 			// trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
-				// 			trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s1_news_" + String(i) + "><i class='arrow down icon' style='color:green'></i></td>"+"</tr>"; 
-				// 		}
-				// 		for (i = 0; i < data["s2_news"].length; i++) {
-				// 			tmp = data["s2_news"][i];
-				// 			// trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
-				// 			trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned ' id=s2_news_" + String(i) + "><i class='arrow up icon' style='color:red'></i></td>"+"</tr>"; 
+						for (i = 0; i < s1News_len; i++) {
+							tmp = data["s1_news"][i];
+							console.log(tmp)
+							// trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s1_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+"</tr>"; 
+							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s1 + "</td>" + "<td class=' center aligned '>" + tmp["pubtime"].split(" ")[4] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" +"</tr>"; 
+						}
+						for (i = 0; i < s2News_len; i++) {
+							tmp = data["s2_news"][i];
+							// trade_news_table += "<tr>"  + "<td class=' center aligned '>" + s2 + "</td>" +  "<td class=' center aligned '>" + tmp["time"] + "</td>" + "<td class=' center aligned '>" + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" + "<td class=' center aligned '>" + '<div class="ui red progress" id=s2_news_'+ String(i)+'><div class="bar"></div></div>' + "</td>"+ "</tr>";
+							trade_news_table += "<tr>" + "<td class=' center aligned '>" + s2 + "</td>" + "<td class=' center aligned '>" +  tmp["pubtime"].split(" ")[4] + "</td>" + "<td class=' center aligned '>"  + "<a href='" + tmp["url"] + "' target='_blank' rel='noopener noreferrer'>" + tmp["title"] + "</a>" + "</td>" +"</tr>"; 
 	
-				// 		}
-				// 	}
-				// 	document.getElementById("trade_news").innerHTML = trade_news_table;
+						}
+					}
+					document.getElementById("trade_news").innerHTML = trade_news_table;
 	
 					// for (i = 0 ; i< data["s2_news"].length; i++){
 					// 	$('#s2_news_'+String(i)).innerHTML = "<i class='arrow up icon'></i>"
@@ -769,8 +829,8 @@
 					// 	// });
 					// }
 	
-	
-			//start_backtest(day, s1, s2, data.thresold[0], data.thresold[1]);
+			console.log(data["backtest"]);
+			backtest(data["backtest"]);
 			}
 		 });
 	
@@ -780,7 +840,54 @@
 	
 		}); 	
 	}
-	
+
+
+
+	function backtest(backtest_data){
+		trade_history_table ="<thead><tr><th class=' center aligned '>交易時間</th><th class=' center aligned '>細節</th><th class=' center aligned '>" + backtest_data["s1"] + "</th><th class=' center aligned '>" + backtest_data["s2"] + "</th><th class=' center aligned '>現金流</th></tr></thead><tbody>";
+		let trade_history_length = backtest_data["history"].length;
+		for (i = 0; i < trade_history_length; i++) {
+			tmp = backtest_data["history"][i]
+
+			if(String(tmp["type"]).includes("強制平倉")){
+				trade_history_table += "<tr class='error'>";
+			}
+			else{
+				trade_history_table += "<tr>";
+			}
+			trade_history_table += "<td class=' center aligned '>" + tmp["time"].split(" ")[4].substring(0, 5) + "</td>" + "<td class=' center aligned '>" + tmp["type"] + "</td>";
+			if(tmp["w1"] < 0){
+				trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w1"] + "</td>";
+			}
+			else{
+				trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w1"] + "</td>";
+			}
+			if(tmp["w2"]<0){
+				trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w2"]  + "</td>";
+			}
+			else{
+				trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w2"] + "</td>";
+			}
+			var payoff = 0.0;
+			payoff += parseFloat(tmp["stock1_payoff"])*1000;
+			payoff += parseFloat(tmp["stock2_payoff"])*1000;
+			trade_history_table += "<td class=' center aligned '>" + payoff.toFixed(0) + "</td></tr>";
+		}
+		
+		if(trade_history_length==0){
+			trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='4'>" + "無任何交易" + "</td>" + "</tr>" ;
+		}
+		
+		else{
+			trade_history_table += "</tbody><tfoot>";
+			trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>開倉次數</th><th class=' center aligned '>" + backtest_data["trade"] + "</th></tr>";
+			trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>" + "報酬" + "</th><th class=' center aligned '>" + parseFloat(backtest_data["profit"]).toFixed(0) + " 元</th></tr>";
+			trade_history_table += "<tr><th></th><th></th><th></th><th class=' center aligned '>報酬率</th><th class=' center aligned '>" + String(parseFloat(backtest_data["return"]).toFixed(2)) + " %</th></tr>";
+			trade_history_table += "</tfoot>"           	
+		}		
+		document.getElementById("trade_history").innerHTML = trade_history_table;
+	}
+
 	function start_backtest(day, s1, s2, open, stop){
 		$.ajax({
 				type:"GET",
@@ -793,7 +900,7 @@
 					trade_history_table ="<thead><tr><th class=' center aligned '>交易時間</th><th class=' center aligned '>細節</th><th class=' center aligned '>" + s1 + "</th><th class=' center aligned '>" + s2 + "</th><th class=' center aligned '>現金流(K)</th></tr></thead><tbody>";
 					trade_news_table = ""
 					
-					var trade_history_length = data["trade_history"].length-1;
+					let trade_history_length = data["trade_history"].length-1;
 					for (i = 0; i < trade_history_length; i++) {
 						tmp = data["trade_history"][i]
 

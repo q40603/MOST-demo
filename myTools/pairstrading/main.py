@@ -182,8 +182,8 @@ result = {
     }
 }
 
-# table.to_sql("Pairs", index=False, con = sqlEngine, if_exists = 'append', chunksize = 1000)
-# print(result)
+table.to_sql("Pairs", index=False, con = sqlEngine, if_exists = 'append', chunksize = 1000)
+# # print(result)
 check = trade_db[f'trade'].insert_one(copy(result))
 
 

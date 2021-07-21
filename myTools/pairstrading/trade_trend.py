@@ -93,6 +93,11 @@ def trade_up_slope(s1_tick, s2_tick, table, strategy):
 
     # 波動太小的配對不開倉
     if volaitlity_small(strategy, table):
+        history.append({
+            "time" : 0,
+            "type" : "配對波動太小，不開倉"
+        })
+        print(f'{table["S1"]} {table["S2"]}  配對波動太小，不開倉')
         return trade, trading_profit, trade_capital, trade_return, history
 
 
@@ -194,6 +199,11 @@ def trade_down_slope(s1_tick, s2_tick, table, strategy):
 
     # 波動太小的配對不開倉
     if volaitlity_small(strategy, table):
+        history.append({
+            "time" : 0,
+            "type" : "配對波動太小，不開倉"
+        })
+        print(f'{table["S1"]} {table["S2"]}  配對波動太小，不開倉')
         return trade, trading_profit, trade_capital, trade_return, history
 
 
@@ -296,6 +306,11 @@ def trade_normal(s1_tick, s2_tick, table, strategy):
 
     # 波動太小的配對不開倉
     if volaitlity_small(strategy, table):
+        history.append({
+            "time" : 0,
+            "type" : "配對波動太小，不開倉"
+        })
+        print(f'{table["S1"]} {table["S2"]}  配對波動太小，不開倉')
         return trade, trading_profit, trade_capital, trade_return, history
 
 

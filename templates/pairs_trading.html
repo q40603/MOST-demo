@@ -328,6 +328,7 @@
 					buy = ["Short", "Long", "Neutral"]
 					text = ""
 					let dl = data.length;
+					
 					// document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
 					for (var i = 0 ; i < dl; i++){
 						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>";
@@ -846,36 +847,42 @@
 	function backtest(backtest_data){
 		trade_history_table ="<thead><tr><th class=' center aligned '>交易時間</th><th class=' center aligned '>細節</th><th class=' center aligned '>" + backtest_data["s1"] + "</th><th class=' center aligned '>" + backtest_data["s2"] + "</th><th class=' center aligned '>現金流</th></tr></thead><tbody>";
 		let trade_history_length = backtest_data["history"].length;
-		for (i = 0; i < trade_history_length; i++) {
-			tmp = backtest_data["history"][i]
+		if(trade_history_length > 1){
+			for (i = 0; i < trade_history_length; i++) {
+				tmp = backtest_data["history"][i]
 
-			if(String(tmp["type"]).includes("強制平倉")){
-				trade_history_table += "<tr class='error'>";
+				if(String(tmp["type"]).includes("強制平倉")){
+					trade_history_table += "<tr class='error'>";
+				}
+				else{
+					trade_history_table += "<tr>";
+				}
+				trade_history_table += "<td class=' center aligned '>" + tmp["time"].split(" ")[4].substring(0, 5) + "</td>" + "<td class=' center aligned '>" + tmp["type"] + "</td>";
+				if(tmp["w1"] < 0){
+					trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w1"] + "</td>";
+				}
+				else{
+					trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w1"] + "</td>";
+				}
+				if(tmp["w2"]<0){
+					trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w2"]  + "</td>";
+				}
+				else{
+					trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w2"] + "</td>";
+				}
+				var payoff = 0.0;
+				payoff += parseFloat(tmp["stock1_payoff"])*1000;
+				payoff += parseFloat(tmp["stock2_payoff"])*1000;
+				trade_history_table += "<td class=' center aligned '>" + payoff.toFixed(0) + "</td></tr>";
 			}
-			else{
-				trade_history_table += "<tr>";
-			}
-			trade_history_table += "<td class=' center aligned '>" + tmp["time"].split(" ")[4].substring(0, 5) + "</td>" + "<td class=' center aligned '>" + tmp["type"] + "</td>";
-			if(tmp["w1"] < 0){
-				trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w1"] + "</td>";
-			}
-			else{
-				trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w1"] + "</td>";
-			}
-			if(tmp["w2"]<0){
-				trade_history_table += "<td class=' center aligned ' style='background:#b4ffa1;'>" + tmp["w2"]  + "</td>";
-			}
-			else{
-				trade_history_table += "<td class=' center aligned ' style='background:#ff9999;'>" + tmp["w2"] + "</td>";
-			}
-			var payoff = 0.0;
-			payoff += parseFloat(tmp["stock1_payoff"])*1000;
-			payoff += parseFloat(tmp["stock2_payoff"])*1000;
-			trade_history_table += "<td class=' center aligned '>" + payoff.toFixed(0) + "</td></tr>";
 		}
+
 		
 		if(trade_history_length==0){
 			trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='4'>" + "無任何交易" + "</td>" + "</tr>" ;
+		}
+		else if(trade_history_length==1){
+			trade_history_table += "<tr>"+ "<td class=' center aligned ' rowspan='4'>" + backtest_data["history"][0]["type"] + "</td>" + "</tr>" ;
 		}
 		
 		else{

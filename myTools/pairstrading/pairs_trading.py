@@ -73,7 +73,7 @@ def get_past_five():
 		"record.win":1,
 		"record.loss":1,
 		"record.zero":1 ,
-		"time":1}).sort("time", -1 ).limit(5)
+		"time":1}).sort("time", -1 ).limit(10)
 	result = [i for i in cursor]
 	return result
 
@@ -81,7 +81,7 @@ def get_past_five():
 #     model = ""
 
 #     if table["model_type"] == 'model1':
-#         model = 'H2'
+#         model = 'H2š
 #     elif table["model_type"] == 'model2':
 #         model = 'H1*'
 #     elif table["model_type"] == 'model3':

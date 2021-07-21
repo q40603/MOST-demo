@@ -1,0 +1,37 @@
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210702.csv
+/home/kctsai/fintech/microcast/upload/upload.sh: line 11: ./to_minutes: No such file or directory
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210705.csv
+/home/kctsai/fintech/microcast/upload/upload.sh: line 11: ./to_minutes: No such file or directory
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210706.csv
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210707.csv
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210708.csv
+/home/kctsai/fintech/microcast/upload/upload.sh: line 14: /home/kctsai/fintech/trend_stationaryconverge.py: No such file or directory
+Error: Failed to open "./converge_data/20210708.csv": open ./converge_data/20210708.csv: no such file or directory.
+See 'influx write -h' for help
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210709.csv
+/home/kctsai/fintech/trend_stationary/PTwithTimeTrend_AllStock.py:104: RuntimeWarning: invalid value encountered in sqrt
+  Johansen_std = np.sqrt(Johansen_var_correct)
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210712.csv
+/home/kctsai/fintech/trend_stationary/PTwithTimeTrend_AllStock.py:104: RuntimeWarning: invalid value encountered in sqrt
+  Johansen_std = np.sqrt(Johansen_var_correct)
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210713.csv
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210714.csv
+/home/kctsai/fintech/microcast/upload
+/home/kctsai
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210716.csv
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210719.csv
+/home/kctsai/fintech/microcast/upload
+influx write -t=OmMqjkZ7wPS-7Qy-HegGcHXDfdMp7-lWCMAfNlmyT-_xxgQ6R0D2DI1f5-MmHgk7xvs94rKD7PI4dN-DE5rwJQ== -o PairTrade -b stock -f ./insert/20210720.csv
+/home/kctsai/fintech/trend_stationary/Matrix_function.py:292: RuntimeWarning: invalid value encountered in log
+  bic[p-1] = np.log( np.linalg.det(sigma) ) + np.log(n) * p * (k*k) / n
+/home/kctsai/fintech/microcast/upload

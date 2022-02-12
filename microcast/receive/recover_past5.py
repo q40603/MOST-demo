@@ -9,7 +9,7 @@ os.chdir("/home/kctsai/fintech/microcast/receive")
 
 _date = datetime.now().strftime("%Y%m%d")
 
-_file = open("../stock_data/{}.csv".format(_date),"w")
+
 
 
 cmoney_url = "https://www.cmoney.tw/etf/ashx/e210.ashx"
@@ -68,18 +68,20 @@ c_list = etf_50_list + etf_51_list
 l = len(c_list)
 # c_list = "|".join(c_list)
 
-try:
-    s=MicroCast.MicroCast_Login('nctu1', 'nctu1', 'webapi.haohaninfo.com','quoteapi.haohaninfo.com:5672',  'webapi.haohaninfo.com',  'webapi.haohaninfo.com')
-    for k in range(0, l, 10):
-        cur_c_list = "|".join(c_list[k:k+10])
-        print(cur_c_list, end=" .................")
-        data = MicroCast.MicroCast_Set(cur_c_list,'Stock','',True)
-        for i in data.get_history_data('09:00:00', '13:31:00'):
-            for j in i:
-                print(j,end=",")
-                print(j, end=",", file=_file)
-            # print()
-            print(_date, file=_file)
-        print(" done")
-except Exception as e:
-    print(e)
+# try:
+s=MicroCast.MicroCast_Login('nctu1', 'nctu1', 'ego.haohaninfo.com', 'ego.haohaninfo.com:7501', 'ego.haohaninfo.com', 'ego.haohaninfo.com')
+# print(s.user_permission)
+for k in range(0, l, 10):
+    _file = open("../stock_data/{}_past{}.csv".format(_date, k//10),"w")
+    cur_c_list = "|".join(c_list[k:k+10])
+    print(cur_c_list, end=" .................", flush=True)
+    data = MicroCast.MicroCast_Set(cur_c_list,'Stock','F06',True)
+    for i in data.recover_some_days_ago():
+        for j in i:
+            # print(j,end=",")
+            print(j, end=",", file=_file)
+        print("", file=_file)
+        #print(_date, file=_file)
+    print(" done")
+# except Exception as e:
+#     print(e)

@@ -18,7 +18,6 @@
 	</style>
 	
 	<body>
-	{% include "nav_bar.html" %}
 		<div class="ui grid" style="margin: 3vh 5vw 5vw; min-height: 85vh;">
 			<div class="six column centered row" style="height: 10vh;">
 				<div class="ui steps">
@@ -70,31 +69,35 @@
 				<div class="one wide column"></div>
 				<!-- <button id="submit1" class="positive ui button">下一步</button> -->
 			</div>
-			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 75vh; overflow-y: scroll;">
-				  <h3>配對</h3>
-					<table class="ui celled table accordion">
-					  <thead>
-						<tr><th colspan="6" class=' center aligned '>
-							<h3 id="pair_compute"></h3>
-						  </th>
-						</tr>
-						<tr>
-						<th class=' center aligned '>股票 1</th>
-						<th class=' center aligned '>股票 2</th>
-						<th class=' center aligned '>權重 1</th>
-						<th class=' center aligned '>權重 2</th>
-						<th class=' center aligned '>Model</th>
-						<!-- <th class=' center aligned '>交易策略</th> -->
-						<th class=' center aligned '>報酬率</th>
-						<th class=' center aligned '>開始交易</th>
-					  </tr>
+			<div class="four column centered row" id = "pairs_table" style="display:none ; height: 85vh; overflow-y: scroll;">
+				<h3>配對</h3>
+				<!-- <div class="six column centered row"  style="min-height: 5vh; margin-top: 4vh;"> -->
+				  <button id="submit3" class="positive ui button" onclick="window.location.reload(true);">重新選擇</button>
+			  <!-- </div> -->
+				  <table class="ui celled table accordion">
+					<thead>
+					  <!-- <tr><th colspan="6" class=' center aligned '>
+						  <h3 id="pair_compute"></h3>
+						</th>
+					  </tr> -->
+					  <tr>
+					  <th class=' center aligned '>股票 1</th>
+					  <th class=' center aligned '>股票 2</th>
+					  <th class=' center aligned '>權重 1</th>
+					  <th class=' center aligned '>權重 2</th>
+					  <th class=' center aligned '>Model</th>
+					  <!-- <th class=' center aligned '>交易策略</th> -->
+					  <th class=' center aligned '>報酬率</th>
+					  <th class=' center aligned '>開始交易</th>
+					</tr>
 
-					</thead>
-					  <tbody id="pair">
-					  </tbody>
-					</table>			  
-			</div>
+				  </thead>
+					<tbody id="pair">
+					</tbody>
+				  </table>			  
+		  </div>
 			<div class="centered row" id = "pairs_chart" style="display:none ; min-height: 75vh;">
+				
 				<div class="eight wide column" id="trade_result" style="height: 75vh; overflow-y: scroll;">
 					<table class="ui red celled striped table">
 						<thead>
@@ -141,7 +144,7 @@
 				</div>
 			</div>
 	
-			<div class="six column centered row" id = "go_trade" style="display:none ; min-height: 5vh; margin-top: 4vh;">
+			<div class="six column centered row" id = "go_trade" style="display:none ; min-height: 5vh; margin-top: 1vh;">
 				<button id="submit3" class="positive ui button" onclick="window.location.reload(true);">重新選擇</button>
 			</div>
 		</div>
@@ -181,7 +184,7 @@
 				url: "/stock/get_past_five",
 				success: function(response) {
 					data = response;
-					console.log(data);
+					// console.log(data);
 
 					var past_five_date = [];
 					var _win = [];
@@ -317,7 +320,10 @@
 				url: "/stock/find_past_pairs",
 				data : { 'trade_date' : day },
 				success: function(response) {
-					data = JSON.parse(response);
+					//console.log(response);
+					rs = JSON.parse(response);
+					data = rs["data"];
+					table_html = rs["html"]
 					pairs_info = data;
 					$( "#chosse_date" ).hide(500);
 					$( "#summary_chart" ).hide(500);
@@ -326,51 +332,52 @@
 					$( "#pairs_found" ).addClass( "active" );
 					risk = ['#94fa7a;', '#fa7575' , '#ffffff']
 					buy = ["Short", "Long", "Neutral"]
-					text = ""
-					let dl = data.length;
+					// text = table_html;
+					// console.log(text);
+					// let dl = data.length;
 					
 					// document.getElementById("pair_compute").innerHTML = "利用平行運算，於 150 檔股票中找出 " + String(data.length) + " 組適合交易之股票配對，計算時間 37.1 秒"  
-					for (var i = 0 ; i < dl; i++){
-						text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>";
+					// for (var i = 0 ; i < dl; i++){
+					// 	text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" +data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>";
 	
-						if(data[i]["w1"]<0){
-							text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
-						}
-						else{
-							text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"						
-						}
-						if(data[i]["w2"]<0){
-							text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
-						}
-						else{
-							text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
-						}
+					// 	if(data[i]["w1"]<0){
+					// 		text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"
+					// 	}
+					// 	else{
+					// 		text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w1"]).toFixed(4)) + "</td>"						
+					// 	}
+					// 	if(data[i]["w2"]<0){
+					// 		text += "<td class=' center aligned ' style='background:#d7fac8;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
+					// 	}
+					// 	else{
+					// 		text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  +String(parseFloat(data[i]["w2"]).toFixed(4)) + "</td>"
+					// 	}
 
-						text += "<td class=' center aligned '>"  +String(data[i]["model"]) + "</td>";
+					// 	text += "<td class=' center aligned '>"  +String(data[i]["model"]) + "</td>";
 
-						// text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
-						if (data[i]["return"]<0){
-							text += "<td class=' center aligned ' style='background:#acff80;'>"
-						}
-						else if (data[i]["return"]>0){
-							text += "<td class=' center aligned ' style='background:#ff8080;'>"
-						}
-						else{
-							text += "<td class=' center aligned '>"
-						}
-						// text += "<td class=' center aligned '>";
-						text += String(parseFloat(data[i]["_return"]).toFixed(3)) + "%</td>"
-						// text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
-						text += "<td class=' center aligned' ><button class='center aligned ui button trade' ";
-						text +=	"pairId = " + i;
-						// text +=	"data-s1 = " + data[i]["S1"];
-						// text +=	" data-s2 = " + data[i]["S2"];
-						// text += " data-day = " + day;
-						// text += " data-w1 = " + data[i]["w1"];
-						// text += " data-w2 = " + data[i]["w2"];
-						text += "> trade </button> " + "</td>" + "</tr>";
-					}
-					document.getElementById("pair").innerHTML = text;
+					// 	// text += "<td class=' center aligned '>"  +data[i]["action"] + "</td>";
+					// 	// if (data[i]["return"]<0){
+					// 	// 	text += "<td class=' center aligned ' style='background:#acff80;'>"
+					// 	// }
+					// 	// else if (data[i]["return"]>0){
+					// 	// 	text += "<td class=' center aligned ' style='background:#ff8080;'>"
+					// 	// }
+					// 	// else{
+					// 	// 	text += "<td class=' center aligned '>"
+					// 	// }
+					// 	text += "<td class=' center aligned '>";
+					// 	text += String(parseFloat(data[i]["_return"]).toFixed(3)) + "%</td>"
+					// 	// text += "<td class=' center aligned' ><button class=' center aligned ui button trade' data-s1 = " + data[i]["stock1"] +" data-s2 = " + data[i]["stock2"] +" data-day = " + day + " data-model_type = " + data[i]["model_type"] + " data-action = " + data[i]["action"] + " data-w1 = " + data[i]["w1"] + " data-w2 = " + data[i]["w2"] + " data-snr = "+ data[i]["snr"] + " data-zcr = "+ data[i]["zcr"] + " data-mu = " + data[i]["mu"] + " data-stdev = " + data[i]["stdev"] + " data-e_mu = " + data[i]["e_mu"] + " data-e_stdev = " + data[i]["e_stdev"] + "> trade </button> " + "</td>" + "</tr>";
+					// 	text += "<td class=' center aligned' ><button class='center aligned ui button trade' ";
+					// 	text +=	"pairId = " + i;
+					// 	// text +=	"data-s1 = " + data[i]["S1"];
+					// 	// text +=	" data-s2 = " + data[i]["S2"];
+					// 	// text += " data-day = " + day;
+					// 	// text += " data-w1 = " + data[i]["w1"];
+					// 	// text += " data-w2 = " + data[i]["w2"];
+					// 	text += "> trade </button> " + "</td>" + "</tr>";
+					// }
+					document.getElementById("pair").innerHTML = table_html;
 					start_trade(data);
 				}
 		 });
@@ -554,17 +561,17 @@
 						max_spread = Math.max(max_spread, data["spread"][i][1]);
 						min_spread = Math.min(min_spread, data["spread"][i][1]);
 					}
-					var _converge = new Array();
-					for (i = 0; i < data["converge_mean"].length; i++) {
-						_converge.push([Date.parse(data["converge_mean"][i][0]), parseFloat(data["converge_mean"][i][1])]);
-						// if(i<spread_m_l){
-						// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
-						// }
-						// else{
-						// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
-						// }
+					// var _converge = new Array();
+					// for (i = 0; i < data["converge_mean"].length; i++) {
+					// 	_converge.push([Date.parse(data["converge_mean"][i][0]), parseFloat(data["converge_mean"][i][1])]);
+					// 	// if(i<spread_m_l){
+					// 	// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(data["spread_m"][i-16])]);
+					// 	// }
+					// 	// else{
+					// 	// 	_mean.push([Date.parse(data["spread"][i].mtimestamp), parseFloat(e_mu)]);
+					// 	// }
 						
-					}	
+					// }	
 
 
 					var _mean = new Array();
@@ -584,8 +591,8 @@
 						max_up = Math.max(max_up, parseFloat(data["mean"][i][1] + 2.5*std));
 						min_down = Math.min(min_down, parseFloat(data["mean"][i][1] - 2.5*std));
 					}	
-					console.log(max_up);							
-					console.log(min_down);		
+					// console.log(max_up);							
+					// console.log(min_down);		
 							// draw chart
 					var chart3 = Highcharts.stockChart('container3', {
 						chart: {
@@ -689,12 +696,12 @@
 						data: _mean,
 						color: '#02d41b'
 						},
-						{
-						name: "converge mean",
-						data: _converge,
-						color: '#34ebeb',
-						width: 0.2,
-						},
+						// {
+						// name: "converge mean",
+						// data: _converge,
+						// color: '#34ebeb',
+						// width: 0.2,
+						// },
 						{
 						name: "up open",
 						data: _openup,

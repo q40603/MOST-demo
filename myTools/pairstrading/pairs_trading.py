@@ -1,3 +1,4 @@
+from optparse import check_choice
 import pymysql
 import json
 import requests
@@ -73,7 +74,7 @@ def get_past_five():
 		"record.win":1,
 		"record.loss":1,
 		"record.zero":1 ,
-		"time":1}).sort("time", -1 ).limit(10)
+		"time":1}).sort("time", -1 ).limit(20)
 	result = [i for i in cursor]
 	return result
 
@@ -155,7 +156,7 @@ def get_pairs_spread(pair_info):
 	|> window(every:inf)\
 	|> interpolate.linear(every: 1m)\
 	'
-	# print(query)
+
 	s1_result = client.query_api().query(org=org, query=query)
 	s1_data = []
 	for table in s1_result:
@@ -201,16 +202,16 @@ def get_pairs_spread(pair_info):
 		_spr = w1 * math.log(s1_data[i][1]) + w2 * math.log(s2_data[i][1])
 		spread.append((s1_data[i][0], _spr))
 
-	query =f'\
-	from(bucket: "converge")\
-	|> range(start: {start}, stop: {end})\
-	|> filter(fn: (r) => r["_measurement"] == "{s1}_{s2}")\
-	'
-	converge_mean = client.query_api().query(org=org, query=query)
-	converge_data = []
-	for table in converge_mean:
-		for record in table.records:
-			converge_data.append((record.get_time(),record.get_value()))	
+	# query =f'\
+	# from(bucket: "converge")\
+	# |> range(start: {start}, stop: {end})\
+	# |> filter(fn: (r) => r["_measurement"] == "{s1}_{s2}")\
+	# '
+	# converge_mean = client.query_api().query(org=org, query=query)
+	# converge_data = []
+	# for table in converge_mean:
+	# 	for record in table.records:
+	# 		converge_data.append((record.get_time(),record.get_value()))	
 
 
 	mean = []
@@ -230,7 +231,7 @@ def get_pairs_spread(pair_info):
 		"s_info" : data,
 		"spread" : spread,
 		"mean" : mean,
-		"converge_mean": converge_data,
+		# "converge_mean": converge_data,
 		"s1_news" : s1_news,
 		"s2_news" : s2_news,
 		"backtest" : backtest_result["trading_result"]
@@ -280,7 +281,16 @@ def get_all_pairs(choose_date):
 	query = "select * from Pairs where time = '" + choose_date + "' order by _return desc;"
 	fin_cursor.execute(query)
 	data = fin_cursor.fetchall()
-	return json.dumps(data)
+
+
+	html = trade_db.table.find(
+		{"time" : choose_date},
+		{"_id" : 0}
+	)
+	return json.dumps({
+		"data" : data,
+		"html" : list(html)[0]["html"]
+	})
 
 # def trade(pair_info):
 

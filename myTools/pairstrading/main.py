@@ -182,10 +182,62 @@ result = {
     }
 }
 
+
+table = table.sort_values(by=['_return'], ascending=False)
 table.to_sql("Pairs", index=False, con = sqlEngine, if_exists = 'append', chunksize = 1000)
+
+
+
+
+
+
 # # print(result)
 check = trade_db[f'trade'].insert_one(copy(result))
 
+data = table.to_dict('records')
+l = len(data)
+
+text = '<tbody id="pair">'
+                    
+for i in range(l):
+    text += "<tr class='styled accordion'> " + "<td class=' center aligned ' >" + data[i]["S1"] + "</td>" + "<td class=' center aligned ' >" + data[i]["S2"] + "</td>"
+
+    if(data[i]["w1"]<0):
+        text += "<td class=' center aligned ' style='background:#d7fac8;'>"  + str("{:.4f}".format(data[i]["w1"])) + "</td>"
+    
+    else:
+        text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  + str("{:.4f}".format(data[i]["w1"])) + "</td>"						
+
+    if(data[i]["w2"]<0):
+        text += "<td class=' center aligned ' style='background:#d7fac8;'>"  + str("{:.4f}".format(data[i]["w2"])) + "</td>"
+    
+    else:
+        text += "<td class=' center aligned ' style='background:#ffbfbf;'>"  + str("{:.4f}".format(data[i]["w2"])) + "</td>"
+
+    text += "<td class=' center aligned '>"  + str(data[i]["model"]) + "</td>"
+
+    # if (data[i]["_return"]<0):
+    #     text += "<td class=' center aligned ' style='background:#acff80;'>"
+
+    # elif (data[i]["_return"]>0):
+    #     text += "<td class=' center aligned ' style='background:#ff8080;'>"
+
+    # else:
+    text += "<td class=' center aligned '>"
+
+
+    text += str("{:.4f}".format(data[i]["_return"])) + "%</td>"
+    
+    text += "<td class=' center aligned' ><button class='center aligned ui button trade' "
+    text +=	"pairId = " + str(i)
+
+    text += "> trade </button> " + "</td>" + "</tr>"
+
+text += '</tbody>'
+trade_db["table"].insert({
+    "time" : _date,
+    "html" : text
+})
 
 # {
 #     "win" :

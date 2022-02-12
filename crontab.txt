@@ -1,0 +1,5 @@
+00 01 * * 1-5 timeout 18000  /home/kctsai/fintech/microcast/receive/data_receive.py >> /home/kctsai/fintech/microcast/log/data_receive.log 2>&1
+00 06 * * 1-5 timeout 18000  /home/kctsai/fintech/microcast/upload/upload.sh >> /home/kctsai/fintech/microcast/log/upload.log 2>&1
+00 01 * * 1-5 timeout 18000  /home/kctsai/fintech/microcast/receive/crawl_yahoo.py >> /home/kctsai/fintech/microcast/log/crawl_yahoo.log 2>&1
+00 07 * * 1-5 timeout 18000 rsync -av /home/kctsai/fintech/microcast/stock_data/ /home/kctsai/fintech/nas/PairsTrade/stock_data/
+00 07 * * 1-5 timeout 18000 rsync -av /home/kctsai/fintech/pair_data/ /home/kctsai/fintech/nas/PairsTrade/pair_data/

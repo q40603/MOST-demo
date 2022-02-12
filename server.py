@@ -24,6 +24,14 @@ def home():
     return render_template("pairs_trading.html")
 
 
+@app.route("/debug")
+def debug():
+    '''
+    return static html file : debug page for developing
+    '''
+    return render_template("debug.html")
+
+
 @app.route("/stock/find_past_pairs", methods=['GET'])
 def find_past_pairs():
     '''

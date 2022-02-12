@@ -65,21 +65,20 @@ finally:
     #print(etf_51_list)
 
 c_list = etf_50_list + etf_51_list
-l = len(c_list)
-# c_list = "|".join(c_list)
 
+c_list = "|".join(c_list)
+
+#print(c_list)
 try:
-    s=MicroCast.MicroCast_Login('nctu1', 'nctu1', 'webapi.haohaninfo.com','quoteapi.haohaninfo.com:5672',  'webapi.haohaninfo.com',  'webapi.haohaninfo.com')
-    for k in range(0, l, 10):
-        cur_c_list = "|".join(c_list[k:k+10])
-        print(cur_c_list, end=" .................")
-        data = MicroCast.MicroCast_Set(cur_c_list,'Stock','',True)
-        for i in data.get_history_data('09:00:00', '13:31:00'):
-            for j in i:
-                print(j,end=",")
-                print(j, end=",", file=_file)
-            # print()
-            print(_date, file=_file)
-        print(" done")
+    s=MicroCast.MicroCast_Login('nctu1', 'nctu1','ego.haohaninfo.com', 'ego.haohaninfo.com:7501', 'ego.haohaninfo.com', 'ego.haohaninfo.com')
+    data = MicroCast.MicroCast_Set(c_list,'Stock','F06',False)
+    for i in data.recover_on_notify():
+        print(i)
+        for j in i:
+            # print(j,end=",")
+            print(j, end=",", file=_file)
+        # print()
+        print(_date, file=_file)
+
 except Exception as e:
     print(e)

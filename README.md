@@ -1,26 +1,18 @@
-# FRIDAYS
-Financial Risk Information Detecting and analYzing System.
+# Pairs Trade Demo Website
+
 ## Built With
 
-* [Flask](http://flask.pocoo.org/) - Backend Framework
-* [Semantic UI](https://semantic-ui.com/) - CSS Framework
+### Front-end
+* Semantic UI
 
-## Getting Started
-1. Install relevant libraries
-```
-pip install -r requirements.txt
-```
-2. Run website
-```
-python server.py
-```
+### Backend
+* Python Flask
+
+### Database Management
+* MongoDB - store stock news
+* MySQL - store pair table
+* InfluxDB - store stock price and volume
+
+
 ## Check website
-[http://localhost:5000/](http://localhost:5000/)
-
-## Website Screenshot
-1. Home page
-![](https://i.imgur.com/aDFzMWO.png)
-2. pair list
-![](https://i.imgur.com/3XeAzmN.png)
-3. trade result
-![](https://i.imgur.com/QJjbdAk.png)
+[https://paris-trading.lab.nycu.edu.tw/](https://paris-trading.lab.nycu.edu.tw/)

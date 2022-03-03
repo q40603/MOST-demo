@@ -133,7 +133,7 @@ def get_pairs_spread(pair_info):
 	s2 = pair_info["S2"]
 	w1 = pair_info["w1"]
 	w2 = pair_info["w2"]
-	client = InfluxDBClient(url="http://paris-trading.lab.nycu.edu.tw:8086", token=token)
+	client = InfluxDBClient(url="http://pairs-trading.lab.nycu.edu.tw:8086", token=token)
 	start = datetime.strptime(f'{choose_date} 09:00', "%Y%m%d %H:%M").strftime('%Y-%m-%dT%H:%M:%SZ')
 	end = datetime.strptime(f'{choose_date} 13:31', "%Y%m%d %H:%M").strftime('%Y-%m-%dT%H:%M:%SZ')
 	query = f'\

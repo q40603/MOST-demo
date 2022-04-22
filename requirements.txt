@@ -32,7 +32,7 @@ PyHamcrest==2.0.2
 pymongo==3.10.1
 PyMySQL==0.9.3
 pyOpenSSL==19.1.0
-PyPDF2==1.26.0
+PyPDF2==1.27.5
 python-dateutil==2.8.1
 pytz==2020.1
 redis==2.10.6
